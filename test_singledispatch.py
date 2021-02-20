@@ -10,7 +10,7 @@ import collections
 import decimal
 from itertools import permutations
 import singledispatch as functools
-from singledispatch_helpers import Support
+from singledispatch.helpers import Support
 try:
     from collections import ChainMap
 except ImportError:

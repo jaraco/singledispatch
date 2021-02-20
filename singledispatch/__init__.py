@@ -10,7 +10,8 @@ __all__ = ['singledispatch']
 
 from functools import update_wrapper
 from weakref import WeakKeyDictionary
-from singledispatch_helpers import MappingProxyType, get_cache_token
+
+from .helpers import MappingProxyType, get_cache_token
 
 ################################################################################
 ### singledispatch() - single-dispatch generic function decorator
