@@ -15,12 +15,12 @@ from singledispatch.helpers import Support
 try:
     from collections import ChainMap
 except ImportError:
-    from singledispatch_helpers import ChainMap
+    from singledispatch.helpers import ChainMap
     collections.ChainMap = ChainMap
 try:
     from collections import OrderedDict
 except ImportError:
-    from singledispatch_helpers import OrderedDict
+    from singledispatch.helpers import OrderedDict
     collections.OrderedDict = OrderedDict
 try:
     import unittest2 as unittest
