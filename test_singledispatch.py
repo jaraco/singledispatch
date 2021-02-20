@@ -6,6 +6,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import sys
 import collections
 import decimal
 from itertools import permutations
@@ -120,13 +121,17 @@ class TestSingleDispatch(unittest.TestCase):
         bases = [c.Sequence, c.MutableMapping, c.Mapping, c.Set]
         for haystack in permutations(bases):
             m = mro(dict, haystack)
-            self.assertEqual(m, [dict, c.MutableMapping, c.Mapping, c.Sized,
-                                 c.Iterable, c.Container, object])
+            expected = _mro_compat([
+                dict, c.MutableMapping, c.Mapping, c.Sized,
+                c.Iterable, c.Container, object])
+            self.assertEqual(m, expected)
         bases = [c.Container, c.Mapping, c.MutableMapping, c.OrderedDict]
         for haystack in permutations(bases):
             m = mro(c.ChainMap, haystack)
-            self.assertEqual(m, [c.ChainMap, c.MutableMapping, c.Mapping,
-                                 c.Sized, c.Iterable, c.Container, object])
+            expected = _mro_compat([
+                c.ChainMap, c.MutableMapping, c.Mapping,
+                c.Sized, c.Iterable, c.Container, object])
+            self.assertEqual(m, expected)
 
         # If there's a generic function with implementations registered for
         # both Sized and Container, passing a defaultdict to it results in an
@@ -147,10 +152,12 @@ class TestSingleDispatch(unittest.TestCase):
         bases = [c.MutableSequence, c.MutableMapping]
         for haystack in permutations(bases):
             m = mro(D, bases)
-            self.assertEqual(m, [D, c.MutableSequence, c.Sequence,
-                                 c.defaultdict, dict, c.MutableMapping,
-                                 c.Mapping, c.Sized, c.Iterable, c.Container,
-                                 object])
+            expected = _mro_compat([
+                D, c.MutableSequence, c.Sequence,
+                c.defaultdict, dict, c.MutableMapping,
+                c.Mapping, c.Sized, c.Iterable, c.Container,
+                object])
+            self.assertEqual(m, expected)
 
         # Container and Callable are registered on different base classes and
         # a generic function supporting both should always pick the Callable
@@ -161,8 +168,10 @@ class TestSingleDispatch(unittest.TestCase):
         bases = [c.Sized, c.Callable, c.Container, c.Mapping]
         for haystack in permutations(bases):
             m = mro(C, haystack)
-            self.assertEqual(m, [C, c.Callable, c.defaultdict, dict, c.Mapping,
-                                 c.Sized, c.Iterable, c.Container, object])
+            expected = _mro_compat([
+                C, c.Callable, c.defaultdict, dict, c.Mapping,
+                c.Sized, c.Iterable, c.Container, object])
+            self.assertEqual(m, expected)
 
     def test_register_abc(self):
         c = collections
@@ -513,6 +522,18 @@ class TestSingleDispatch(unittest.TestCase):
         g._clear_cache()
         self.assertEqual(len(td), 0)
         functools.WeakKeyDictionary = _orig_wkd
+
+
+def _mro_compat(classes):
+    if sys.version_info < (3, 6):
+        return classes
+    coll_idx = classes.index(collections.Mapping) + 1
+    classes[coll_idx:coll_idx] = [collections.Collection]
+    import contextlib
+    with contextlib.suppress(ValueError):
+        rev_idx = classes.index(collections.Sequence) + 1
+        classes[rev_idx:rev_idx] = [collections.Reversible]
+    return classes
 
 
 if __name__ == '__main__':
