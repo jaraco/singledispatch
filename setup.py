@@ -41,13 +41,12 @@ if sys.version_info[:2] < (2, 7):
 
 setup (
     name = 'singledispatch',
-    version = '3.4.0.3',
-    author = 'Łukasz Langa',
-    author_email = 'lukasz@langa.pl',
+    version = '3.4.0.4',
+    author = 'Jason R. Coombs',
+    author_email = 'jaraco@jaraco.com',
     description = __doc__,
     long_description = long_description,
-    url = 'http://docs.python.org/3/library/functools.html'
-          '#functools.singledispatch',
+    url = 'https://github.com/jaraco/singledispatch',
     keywords = 'single dispatch generic functions singledispatch '
                'genericfunctions decorator backport',
     platforms = ['any'],

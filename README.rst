@@ -137,16 +137,26 @@ applies to bugs only.
 Maintenance
 -----------
 
-This backport is maintained on BitBucket by Łukasz Langa, one of the
+This backport is maintained on Github by Jason R. Coombs, one of the
 members of the core CPython team:
 
-* `singledispatch Mercurial repository <https://bitbucket.org/ambv/singledispatch>`_
+* `repository <https://github.com/jaraco/singledispatch>`_
 
-* `singledispatch issue tracker <https://bitbucket.org/ambv/singledispatch/issues>`_
+* `issue tracker <https://github.com/jaraco/singledispatch/issues>`_
 
 
 Change Log
 ----------
+
+3.4.0.4
+~~~~~~~
+
+Hosting moved to Github.
+
+Now maintained by jaraco. Thanks to Łukasz Langa for the original
+backport and maintenance.
+
+Last version before switch to semver for versioning.
 
 3.4.0.3
 ~~~~~~~
