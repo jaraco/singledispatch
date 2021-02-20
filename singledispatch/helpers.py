@@ -155,9 +155,11 @@ class MappingProxyType(UserDict):
         self.data = data
 
 
-def get_cache_token():
-    return ABCMeta._abc_invalidation_counter
-
+try:
+    from abc import get_cache_token
+except ImportError:
+    def get_cache_token():
+        return ABCMeta._abc_invalidation_counter
 
 
 class Support(object):
