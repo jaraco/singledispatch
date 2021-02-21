@@ -116,7 +116,7 @@ def _compose_mro(cls, types):
     mro = []
     for typ in types:
         found = []
-        for sub in typ.__subclasses__():
+        for sub in filter(_safe, typ.__subclasses__()):
             if sub not in bases and issubclass(cls, sub):
                 found.append([s for s in sub.__mro__ if s in type_set])
         if not found:
@@ -129,6 +129,14 @@ def _compose_mro(cls, types):
                 if subcls not in mro:
                     mro.append(subcls)
     return _c3_mro(cls, abcs=mro)
+
+
+def _safe(class_):
+    """
+    Return if the class is safe for testing as subclass. Ref #2.
+    """
+    return not getattr(class_, '__origin__', None)
+
 
 def _find_impl(cls, registry):
     """Returns the best matching implementation from *registry* for type *cls*.
