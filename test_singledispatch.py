@@ -523,6 +523,43 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertEqual(len(td), 0)
         functools.WeakKeyDictionary = _orig_wkd
 
+    def test_annotations(self):
+        @functools.singledispatch
+        def i(arg):
+            return "base"
+        #@i.register
+        #def _(arg: collections.abc.Mapping)
+        def _(arg):
+            return "mapping"
+        _.__annotations__ = dict(arg=collections.Mapping)
+        i.register(_)
+        #@i.register
+        #def _(arg: "collections.abc.Sequence"):
+        def _(arg):
+            return "sequence"
+        _.__annotations__ = dict(arg=collections.Sequence)
+        i.register(_)
+        self.assertEqual(i(None), "base")
+        self.assertEqual(i({"a": 1}), "mapping")
+        self.assertEqual(i([1, 2, 3]), "sequence")
+        self.assertEqual(i((1, 2, 3)), "sequence")
+        self.assertEqual(i("str"), "sequence")
+
+        if sys.version_info < (3,):
+            # the rest of this test fails on Python 2
+            return
+
+        # Registering classes as callables doesn't work with annotations,
+        # you need to pass the type explicitly.
+        @i.register(str)
+        class _:
+            def __init__(self, arg):
+                self.arg = arg
+
+            def __eq__(self, other):
+                return self.arg == other
+        self.assertEqual(i("str"), "str")
+
 
 def _mro_compat(classes):
     if sys.version_info < (3, 6):

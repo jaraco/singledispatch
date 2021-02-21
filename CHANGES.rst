@@ -1,3 +1,8 @@
+v3.6.0
+======
+
+#1: Added support for annotations as found on Python 3.7.
+
 v3.5.0
 ======
 
@@ -6,6 +11,8 @@ Adopt semver for versioning.
 Adopt jaraco/skeleton for packaging.
 
 Declare support through 3.9.
+
+#2: Tests now pass under pytest and when typing is present.
 
 3.4.0.4
 =======

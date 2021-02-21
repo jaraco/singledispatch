@@ -170,3 +170,9 @@ class Support(object):
         if 'PyPy' in sys.version:
             return self.dummy
         return func
+
+
+def get_type_hints(func):
+    # only import typing if annotation parsing is necessary
+    from typing import get_type_hints
+    return get_type_hints(func) or getattr(func, '__annotations__', {})

@@ -11,7 +11,7 @@ __all__ = ['singledispatch']
 from functools import update_wrapper
 from weakref import WeakKeyDictionary
 
-from .helpers import MappingProxyType, get_cache_token
+from .helpers import MappingProxyType, get_cache_token, get_type_hints
 
 ################################################################################
 ### singledispatch() - single-dispatch generic function decorator
@@ -208,7 +208,23 @@ def singledispatch(func):
 
         """
         if func is None:
-            return lambda f: register(cls, f)
+            if isinstance(cls, type):
+                return lambda f: register(cls, f)
+            ann = getattr(cls, '__annotations__', {})
+            if not ann:
+                raise TypeError(
+                    "Invalid first argument to `register()`: {cls!r}. "
+                    "Use either `@register(some_class)` or plain `@register` "
+                    "on an annotated function.".format(**locals())
+                )
+            func = cls
+
+            argname, cls = next(iter(get_type_hints(func).items()))
+            if not isinstance(cls, type):
+                raise TypeError(
+                    "Invalid annotation for {argname!r}. "
+                    "{cls!r} is not a class.".format(**locals())
+                )
         registry[cls] = func
         if ns.cache_token is None and hasattr(cls, '__abstractmethods__'):
             ns.cache_token = get_cache_token()
