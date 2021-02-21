@@ -1,3 +1,12 @@
+v3.5.0
+======
+
+Adopt semver for versioning.
+
+Adopt jaraco/skeleton for packaging.
+
+Declare support through 3.9.
+
 3.4.0.4
 =======
 
