@@ -125,27 +125,6 @@ The vanilla documentation is available at
 http://docs.python.org/3/library/functools.html#functools.singledispatch.
 
 
-Versioning
-----------
-
-This backport is intended to keep 100% compatibility with the vanilla
-release in Python 3.4+. To help maintaining a version you want and
-expect, a versioning scheme is used where:
-
-* the first three numbers indicate the version of Python 3.x from which the
-  backport is done
-
-* a backport release number is provided after the last dot
-
-For example, ``3.4.0.0`` is the **first** release of ``singledispatch``
-compatible with the library found in Python **3.4.0**.
-
-A single exception from the 100% compatibility principle is that bugs
-fixed before releasing another minor Python 3.x.y version **will be
-included** in the backport releases done in the mean time. This rule
-applies to bugs only.
-
-
 Maintenance
 -----------
 
