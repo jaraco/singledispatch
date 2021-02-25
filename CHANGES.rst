@@ -1,3 +1,9 @@
+v3.6.1
+======
+
+Fixed DeprecationWarnings referring to members from
+``collections.abc`` referenced from ``collections``.
+
 v3.6.0
 ======
 

@@ -27,10 +27,12 @@ try:
 except ImportError:
     import unittest
 
+coll_abc = getattr(collections, 'abc', collections)
+
 
 support = Support()
 for _prefix in ('collections.abc', '_abcoll'):
-    if _prefix in repr(collections.Container):
+    if _prefix in repr(coll_abc.Container):
         abcoll_prefix = _prefix
         break
 else:
@@ -116,7 +118,7 @@ class TestSingleDispatch(unittest.TestCase):
 
     def test_compose_mro(self):
         # None of the examples in this test depend on haystack ordering.
-        c = collections
+        c = coll_abc
         mro = functools._compose_mro
         bases = [c.Sequence, c.MutableMapping, c.Mapping, c.Set]
         for haystack in permutations(bases):
@@ -125,11 +127,11 @@ class TestSingleDispatch(unittest.TestCase):
                 dict, c.MutableMapping, c.Mapping, c.Sized,
                 c.Iterable, c.Container, object])
             self.assertEqual(m, expected)
-        bases = [c.Container, c.Mapping, c.MutableMapping, c.OrderedDict]
+        bases = [c.Container, c.Mapping, c.MutableMapping, collections.OrderedDict]
         for haystack in permutations(bases):
-            m = mro(c.ChainMap, haystack)
+            m = mro(collections.ChainMap, haystack)
             expected = _mro_compat([
-                c.ChainMap, c.MutableMapping, c.Mapping,
+                collections.ChainMap, c.MutableMapping, c.Mapping,
                 c.Sized, c.Iterable, c.Container, object])
             self.assertEqual(m, expected)
 
@@ -139,14 +141,14 @@ class TestSingleDispatch(unittest.TestCase):
         # test_mro_conflicts).
         bases = [c.Container, c.Sized, str]
         for haystack in permutations(bases):
-            m = mro(c.defaultdict, [c.Sized, c.Container, str])
-            self.assertEqual(m, [c.defaultdict, dict, c.Sized, c.Container,
+            m = mro(collections.defaultdict, [c.Sized, c.Container, str])
+            self.assertEqual(m, [collections.defaultdict, dict, c.Sized, c.Container,
                                  object])
 
         # MutableSequence below is registered directly on D. In other words, it
         # preceeds MutableMapping which means single dispatch will always
         # choose MutableSequence here.
-        class D(c.defaultdict):
+        class D(collections.defaultdict):
             pass
         c.MutableSequence.register(D)
         bases = [c.MutableSequence, c.MutableMapping]
@@ -154,7 +156,7 @@ class TestSingleDispatch(unittest.TestCase):
             m = mro(D, bases)
             expected = _mro_compat([
                 D, c.MutableSequence, c.Sequence,
-                c.defaultdict, dict, c.MutableMapping,
+                collections.defaultdict, dict, c.MutableMapping,
                 c.Mapping, c.Sized, c.Iterable, c.Container,
                 object])
             self.assertEqual(m, expected)
@@ -162,19 +164,19 @@ class TestSingleDispatch(unittest.TestCase):
         # Container and Callable are registered on different base classes and
         # a generic function supporting both should always pick the Callable
         # implementation if a C instance is passed.
-        class C(c.defaultdict):
+        class C(collections.defaultdict):
             def __call__(self):
                 pass
         bases = [c.Sized, c.Callable, c.Container, c.Mapping]
         for haystack in permutations(bases):
             m = mro(C, haystack)
             expected = _mro_compat([
-                C, c.Callable, c.defaultdict, dict, c.Mapping,
+                C, c.Callable, collections.defaultdict, dict, c.Mapping,
                 c.Sized, c.Iterable, c.Container, object])
             self.assertEqual(m, expected)
 
     def test_register_abc(self):
-        c = collections
+        c = coll_abc
         d = {"a": "b"}
         l = [1, 2, 3]
         s = set([object(), None])
@@ -200,7 +202,7 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertEqual(g(s), "sized")
         self.assertEqual(g(f), "sized")
         self.assertEqual(g(t), "sized")
-        g.register(c.ChainMap, lambda obj: "chainmap")
+        g.register(collections.ChainMap, lambda obj: "chainmap")
         self.assertEqual(g(d), "mutablemapping")  # irrelevant ABCs registered
         self.assertEqual(g(l), "sized")
         self.assertEqual(g(s), "sized")
@@ -268,7 +270,7 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertEqual(g(t), "tuple")
 
     def test_c3_abc(self):
-        c = collections
+        c = coll_abc
         mro = functools._c3_mro
         class A(object):
             pass
@@ -292,7 +294,7 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertEqual(mro(X, abcs=many_abcs), expected)
 
     def test_mro_conflicts(self):
-        c = collections
+        c = coll_abc
         @functools.singledispatch
         def g(arg):
             return "base"
@@ -353,7 +355,7 @@ class TestSingleDispatch(unittest.TestCase):
         # MutableMapping's bases implicit as well from defaultdict's
         # perspective.
         with self.assertRaises(RuntimeError) as re_two:
-            h(c.defaultdict(lambda: 0))
+            h(collections.defaultdict(lambda: 0))
         self.assertIn(
             str(re_two.exception),
             (("Ambiguous dispatch: <class '{prefix}.Container'> "
@@ -361,7 +363,7 @@ class TestSingleDispatch(unittest.TestCase):
              ("Ambiguous dispatch: <class '{prefix}.Sized'> "
               "or <class '{prefix}.Container'>").format(prefix=abcoll_prefix)),
         )
-        class R(c.defaultdict):
+        class R(collections.defaultdict):
             pass
         c.MutableSequence.register(R)
         @functools.singledispatch
@@ -441,7 +443,7 @@ class TestSingleDispatch(unittest.TestCase):
         _orig_wkd = functools.WeakKeyDictionary
         td = TracingDict()
         functools.WeakKeyDictionary = lambda: td
-        c = collections
+        c = coll_abc
         @functools.singledispatch
         def g(arg):
             return "base"
@@ -531,13 +533,13 @@ class TestSingleDispatch(unittest.TestCase):
         #def _(arg: collections.abc.Mapping)
         def _(arg):
             return "mapping"
-        _.__annotations__ = dict(arg=collections.Mapping)
+        _.__annotations__ = dict(arg=coll_abc.Mapping)
         i.register(_)
         #@i.register
         #def _(arg: "collections.abc.Sequence"):
         def _(arg):
             return "sequence"
-        _.__annotations__ = dict(arg=collections.Sequence)
+        _.__annotations__ = dict(arg=coll_abc.Sequence)
         i.register(_)
         self.assertEqual(i(None), "base")
         self.assertEqual(i({"a": 1}), "mapping")
@@ -564,12 +566,12 @@ class TestSingleDispatch(unittest.TestCase):
 def _mro_compat(classes):
     if sys.version_info < (3, 6):
         return classes
-    coll_idx = classes.index(collections.Mapping) + 1
-    classes[coll_idx:coll_idx] = [collections.Collection]
+    coll_idx = classes.index(coll_abc.Mapping) + 1
+    classes[coll_idx:coll_idx] = [coll_abc.Collection]
     import contextlib
     with contextlib.suppress(ValueError):
-        rev_idx = classes.index(collections.Sequence) + 1
-        classes[rev_idx:rev_idx] = [collections.Reversible]
+        rev_idx = classes.index(coll_abc.Sequence) + 1
+        classes[rev_idx:rev_idx] = [coll_abc.Reversible]
     return classes
 
 

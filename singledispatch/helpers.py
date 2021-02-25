@@ -6,9 +6,14 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from abc import ABCMeta
-from collections import MutableMapping
 import sys
+from abc import ABCMeta
+
+try:
+    from collections.abc import MutableMapping
+except ImportError:
+    from collections import MutableMapping
+
 try:
     from collections import UserDict
 except ImportError:
