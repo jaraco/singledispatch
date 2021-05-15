@@ -172,7 +172,6 @@ def singledispatch(func):
     function acts as the default implementation, and additional
     implementations can be registered using the register() attribute of the
     generic function.
-
     """
     registry = {}
     dispatch_cache = WeakKeyDictionary()
@@ -232,8 +231,13 @@ def singledispatch(func):
         return func
 
     def wrapper(*args, **kw):
+        if not args:
+            raise TypeError('{0} requires at least '
+                            '1 positional argument'.format(funcname))
+
         return dispatch(args[0].__class__)(*args, **kw)
 
+    funcname = getattr(func, '__name__', 'singledispatch function')
     registry[object] = func
     wrapper.register = register
     wrapper.dispatch = dispatch
