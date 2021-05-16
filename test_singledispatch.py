@@ -748,6 +748,7 @@ class TestSingleDispatch(unittest.TestCase):
                 # or ABCs.
                 return "I annotated with a generic collection"
             _.__annotations__ = dict(arg=typing.Iterable[str])
+            i.register(_)
         self.assertTrue(str(exc.exception).startswith(
             "Invalid annotation for 'arg'."
         ))
