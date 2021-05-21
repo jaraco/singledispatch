@@ -219,7 +219,7 @@ def singledispatch(func):
             func = cls
 
             argname, cls = next(iter(get_type_hints(func).items()))
-            if not isinstance(cls, type):
+            if not isinstance(cls, type) or hasattr(cls, '_gorg'):
                 raise TypeError(
                     "Invalid annotation for {argname!r}. "
                     "{cls!r} is not a class.".format(**locals())
