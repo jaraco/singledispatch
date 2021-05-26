@@ -298,8 +298,15 @@ class TestSingleDispatch(unittest.TestCase):
         class MetaA(type):
             def __len__(self):
                 return 0
-        class A(metaclass=MetaA):
-            pass
+        if sys.version_info < (3,):
+            class A(object):
+                __metaclass__ = MetaA
+        else:
+            """
+            class A(metaclass=MetaA):
+                pass
+            """
+            A = MetaA('A', (), {})
         class AA(A):
             pass
         @functools.singledispatch
