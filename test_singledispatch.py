@@ -293,6 +293,31 @@ class TestSingleDispatch(unittest.TestCase):
         many_abcs = [c.Mapping, c.Sized, c.Callable, c.Container, c.Iterable]
         self.assertEqual(mro(X, abcs=many_abcs), expected)
 
+    def test_false_meta(self):
+        # see issue23572
+        class MetaA(type):
+            def __len__(self):
+                return 0
+        if sys.version_info < (3,):
+            class A(object):
+                __metaclass__ = MetaA
+        else:
+            """
+            class A(metaclass=MetaA):
+                pass
+            """
+            A = MetaA('A', (), {})
+        class AA(A):
+            pass
+        @functools.singledispatch
+        def fun(a):
+            return 'base A'
+        @fun.register(A)
+        def _(a):
+            return 'fun A'
+        aa = AA()
+        self.assertEqual(fun(aa), 'fun A')
+
     def test_mro_conflicts(self):
         c = coll_abc
         @functools.singledispatch
