@@ -1,3 +1,8 @@
+v3.6.2
+======
+
+#3 and bpo-23572: Fix behavior when metaclass implements bool.
+
 v3.6.1
 ======
 
