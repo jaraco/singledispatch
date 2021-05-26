@@ -17,6 +17,9 @@
 .. .. image:: https://readthedocs.org/projects/skeleton/badge/?version=latest
 ..    :target: https://skeleton.readthedocs.io/en/latest/?badge=latest
 
+.. image:: https://img.shields.io/badge/skeleton-2021-informational
+   :target: https://blog.jaraco.com/skeleton
+
 `PEP 443 <http://www.python.org/dev/peps/pep-0443/>`_ proposed to expose
 a mechanism in the ``functools`` standard library module in Python 3.4
 that provides a simple form of generic programming known as
