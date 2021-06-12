@@ -264,7 +264,7 @@ def singledispatch(func):
 
 
 # Descriptor version
-class singledispatchmethod:
+class singledispatchmethod(object):
     """Single-dispatch generic method descriptor.
 
     Supports wrapping existing descriptors and handles non-descriptor
