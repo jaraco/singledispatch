@@ -14,6 +14,7 @@ from itertools import permutations
 import singledispatch as functools
 from singledispatch.helpers import Support
 import typing
+import six
 try:
     from collections import ChainMap
 except ImportError:
@@ -580,8 +581,8 @@ class TestSingleDispatch(unittest.TestCase):
 
         # Registering classes as callables doesn't work with annotations,
         # you need to pass the type explicitly.
-        @i.register(str)
-        class _:
+        @i.register(six.text_type)
+        class _(object):
             def __init__(self, arg):
                 self.arg = arg
 
@@ -590,14 +591,14 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertEqual(i("str"), "str")
 
     def test_method_register(self):
-        class A:
+        class A(object):
             @functools.singledispatchmethod
             def t(self, arg):
                 self.arg = "base"
             @t.register(int)
             def _(self, arg):
                 self.arg = "int"
-            @t.register(str)
+            @t.register(six.text_type)
             def _(self, arg):
                 self.arg = "str"
         a = A()
@@ -616,7 +617,7 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertFalse(hasattr(aa, 'arg'))
 
     def test_staticmethod_register(self):
-        class A:
+        class A(object):
             @functools.singledispatchmethod
             @staticmethod
             def t(arg):
@@ -625,10 +626,10 @@ class TestSingleDispatch(unittest.TestCase):
             @staticmethod
             def _(arg):
                 return isinstance(arg, int)
-            @t.register(str)
+            @t.register(six.text_type)
             @staticmethod
             def _(arg):
-                return isinstance(arg, str)
+                return isinstance(arg, six.text_type)
         a = A()
 
         self.assertTrue(A.t(0))
@@ -636,7 +637,7 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertEqual(A.t(0.0), 0.0)
 
     def test_classmethod_register(self):
-        class A:
+        class A(object):
             def __init__(self, arg):
                 self.arg = arg
 
@@ -648,7 +649,7 @@ class TestSingleDispatch(unittest.TestCase):
             @classmethod
             def _(cls, arg):
                 return cls("int")
-            @t.register(str)
+            @t.register(six.text_type)
             @classmethod
             def _(cls, arg):
                 return cls("str")
@@ -658,7 +659,7 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertEqual(A.t(0.0).arg, "base")
 
     def test_callable_register(self):
-        class A:
+        class A(object):
             def __init__(self, arg):
                 self.arg = arg
 
@@ -671,7 +672,7 @@ class TestSingleDispatch(unittest.TestCase):
         @classmethod
         def _(cls, arg):
             return cls("int")
-        @A.t.register(str)
+        @A.t.register(six.text_type)
         @classmethod
         def _(cls, arg):
             return cls("str")
@@ -691,7 +692,7 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertTrue(Abstract.add.__isabstractmethod__)
 
     def test_type_ann_register(self):
-        class A:
+        class A(object):
             @functools.singledispatchmethod
             def t(self, arg):
                 return "base"
@@ -705,7 +706,7 @@ class TestSingleDispatch(unittest.TestCase):
             # def _(self, arg: str):
             def _(self, arg):
                 return "str"
-            _.__annotations__ = dict(arg=str)
+            _.__annotations__ = dict(arg=six.text_type)
             t.register(_)
 
         a = A()
@@ -720,6 +721,10 @@ class TestSingleDispatch(unittest.TestCase):
             ". Use either `@register(some_class)` or plain `@register` on an "
             "annotated function."
         )
+        if six.PY2:
+            msg_body = "<function _"
+        else:
+            msg_body = "<function TestSingleDispatch.test_invalid_registrations.<locals>._"
         @functools.singledispatch
         def i(arg):
             return "base"
@@ -733,9 +738,7 @@ class TestSingleDispatch(unittest.TestCase):
             @i.register
             def _(arg):
                 return "I forgot to annotate"
-        self.assertTrue(str(exc.exception).startswith(msg_prefix +
-            "<function TestSingleDispatch.test_invalid_registrations.<locals>._"
-        ))
+        self.assertTrue(str(exc.exception).startswith(msg_prefix + msg_body))
         self.assertTrue(str(exc.exception).endswith(msg_suffix))
 
         with self.assertRaises(TypeError) as exc:
