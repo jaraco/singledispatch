@@ -173,7 +173,7 @@ def _validate_annotation(func):
     try:
         # In Python 3.5 and 3.6, the classes in typing are considered instances
         # of type, but they aren't valid for registering single dispatch
-        # functions so we need to check against TypingMeta instead
+        # functions so we need to check against GenricMeta instead
         from typing import GenericMeta
         valid = not isinstance(cls, GenericMeta)
     except ImportError:
