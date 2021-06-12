@@ -6,7 +6,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-__all__ = ['singledispatch']
+__all__ = ['singledispatch', 'singledispatchmethod']
 
 from weakref import WeakKeyDictionary
 
