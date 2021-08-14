@@ -43,6 +43,9 @@ else:
 del _prefix
 
 
+str = type("")
+
+
 class TestSingleDispatch(unittest.TestCase):
     def test_simple_overloads(self):
         @functools.singledispatch
@@ -598,7 +601,7 @@ class TestSingleDispatch(unittest.TestCase):
             @t.register(int)
             def _(self, arg):
                 self.arg = "int"
-            @t.register(six.text_type)
+            @t.register(str)
             def _(self, arg):
                 self.arg = "str"
         a = A()
@@ -626,10 +629,10 @@ class TestSingleDispatch(unittest.TestCase):
             @staticmethod
             def _(arg):
                 return isinstance(arg, int)
-            @t.register(six.text_type)
+            @t.register(str)
             @staticmethod
             def _(arg):
-                return isinstance(arg, six.text_type)
+                return isinstance(arg, str)
         a = A()
 
         self.assertTrue(A.t(0))
@@ -649,7 +652,7 @@ class TestSingleDispatch(unittest.TestCase):
             @classmethod
             def _(cls, arg):
                 return cls("int")
-            @t.register(six.text_type)
+            @t.register(str)
             @classmethod
             def _(cls, arg):
                 return cls("str")
@@ -672,7 +675,7 @@ class TestSingleDispatch(unittest.TestCase):
         @classmethod
         def _(cls, arg):
             return cls("int")
-        @A.t.register(six.text_type)
+        @A.t.register(str)
         @classmethod
         def _(cls, arg):
             return cls("str")
@@ -706,7 +709,7 @@ class TestSingleDispatch(unittest.TestCase):
             # def _(self, arg: str):
             def _(self, arg):
                 return "str"
-            _.__annotations__ = dict(arg=six.text_type)
+            _.__annotations__ = dict(arg=str)
             t.register(_)
 
         a = A()
@@ -756,7 +759,7 @@ class TestSingleDispatch(unittest.TestCase):
             "Invalid annotation for 'arg'."
         ))
         self.assertTrue(str(exc.exception).endswith(
-            'typing.Iterable[str] is not a class.'
+            'typing.Iterable[' + str.__name__ + '] is not a class.'
         ))
 
     def test_invalid_positional_argument(self):
