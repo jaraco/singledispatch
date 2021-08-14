@@ -724,10 +724,6 @@ class TestSingleDispatch(unittest.TestCase):
             ". Use either `@register(some_class)` or plain `@register` on an "
             "annotated function."
         )
-        if six.PY2:
-            msg_body = "<function _"
-        else:
-            msg_body = "<function TestSingleDispatch.test_invalid_registrations.<locals>._"
         @functools.singledispatch
         def i(arg):
             return "base"
@@ -741,7 +737,10 @@ class TestSingleDispatch(unittest.TestCase):
             @i.register
             def _(arg):
                 return "I forgot to annotate"
-        self.assertTrue(str(exc.exception).startswith(msg_prefix + msg_body))
+        scope = "TestSingleDispatch.test_invalid_registrations.<locals>." * six.PY3
+        self.assertTrue(str(exc.exception).startswith(msg_prefix +
+            "<function " + scope + "_"
+        ))
         self.assertTrue(str(exc.exception).endswith(msg_suffix))
 
         with self.assertRaises(TypeError) as exc:
