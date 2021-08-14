@@ -1,3 +1,10 @@
+v3.7.0
+======
+
+#4: Add ``singledispatchmethod`` from Python 3.8.
+
+Incorporate minor changes from Python 3.8.
+
 v3.6.2
 ======
 

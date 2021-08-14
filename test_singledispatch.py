@@ -6,12 +6,15 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import abc
 import sys
 import collections
 import decimal
 from itertools import permutations
 import singledispatch as functools
 from singledispatch.helpers import Support
+import typing
+import six
 try:
     from collections import ChainMap
 except ImportError:
@@ -38,6 +41,9 @@ for _prefix in ('collections.abc', '_abcoll'):
 else:
     abcoll_prefix = '?'
 del _prefix
+
+
+str = type("")
 
 
 class TestSingleDispatch(unittest.TestCase):
@@ -586,6 +592,182 @@ class TestSingleDispatch(unittest.TestCase):
             def __eq__(self, other):
                 return self.arg == other
         self.assertEqual(i("str"), "str")
+
+    def test_method_register(self):
+        class A(object):
+            @functools.singledispatchmethod
+            def t(self, arg):
+                self.arg = "base"
+            @t.register(int)
+            def _(self, arg):
+                self.arg = "int"
+            @t.register(str)
+            def _(self, arg):
+                self.arg = "str"
+        a = A()
+
+        a.t(0)
+        self.assertEqual(a.arg, "int")
+        aa = A()
+        self.assertFalse(hasattr(aa, 'arg'))
+        a.t('')
+        self.assertEqual(a.arg, "str")
+        aa = A()
+        self.assertFalse(hasattr(aa, 'arg'))
+        a.t(0.0)
+        self.assertEqual(a.arg, "base")
+        aa = A()
+        self.assertFalse(hasattr(aa, 'arg'))
+
+    def test_staticmethod_register(self):
+        class A(object):
+            @functools.singledispatchmethod
+            @staticmethod
+            def t(arg):
+                return arg
+            @t.register(int)
+            @staticmethod
+            def _(arg):
+                return isinstance(arg, int)
+            @t.register(str)
+            @staticmethod
+            def _(arg):
+                return isinstance(arg, str)
+        a = A()
+
+        self.assertTrue(A.t(0))
+        self.assertTrue(A.t(''))
+        self.assertEqual(A.t(0.0), 0.0)
+
+    def test_classmethod_register(self):
+        class A(object):
+            def __init__(self, arg):
+                self.arg = arg
+
+            @functools.singledispatchmethod
+            @classmethod
+            def t(cls, arg):
+                return cls("base")
+            @t.register(int)
+            @classmethod
+            def _(cls, arg):
+                return cls("int")
+            @t.register(str)
+            @classmethod
+            def _(cls, arg):
+                return cls("str")
+
+        self.assertEqual(A.t(0).arg, "int")
+        self.assertEqual(A.t('').arg, "str")
+        self.assertEqual(A.t(0.0).arg, "base")
+
+    def test_callable_register(self):
+        class A(object):
+            def __init__(self, arg):
+                self.arg = arg
+
+            @functools.singledispatchmethod
+            @classmethod
+            def t(cls, arg):
+                return cls("base")
+
+        @A.t.register(int)
+        @classmethod
+        def _(cls, arg):
+            return cls("int")
+        @A.t.register(str)
+        @classmethod
+        def _(cls, arg):
+            return cls("str")
+
+        self.assertEqual(A.t(0).arg, "int")
+        self.assertEqual(A.t('').arg, "str")
+        self.assertEqual(A.t(0.0).arg, "base")
+
+    def test_abstractmethod_register(self):
+        class Abstract(abc.ABCMeta):
+
+            @functools.singledispatchmethod
+            @abc.abstractmethod
+            def add(self, x, y):
+                pass
+
+        self.assertTrue(Abstract.add.__isabstractmethod__)
+
+    def test_type_ann_register(self):
+        class A(object):
+            @functools.singledispatchmethod
+            def t(self, arg):
+                return "base"
+            # @t.register
+            # def _(self, arg: int):
+            def _(self, arg):
+                return "int"
+            _.__annotations__ = dict(arg=int)
+            t.register(_)
+            # @t.register
+            # def _(self, arg: str):
+            def _(self, arg):
+                return "str"
+            _.__annotations__ = dict(arg=str)
+            t.register(_)
+
+        a = A()
+
+        self.assertEqual(a.t(0), "int")
+        self.assertEqual(a.t(''), "str")
+        self.assertEqual(a.t(0.0), "base")
+
+    def test_invalid_registrations(self):
+        msg_prefix = "Invalid first argument to `register()`: "
+        msg_suffix = (
+            ". Use either `@register(some_class)` or plain `@register` on an "
+            "annotated function."
+        )
+        @functools.singledispatch
+        def i(arg):
+            return "base"
+        with self.assertRaises(TypeError) as exc:
+            @i.register(42)
+            def _(arg):
+                return "I annotated with a non-type"
+        self.assertTrue(str(exc.exception).startswith(msg_prefix + "42"))
+        self.assertTrue(str(exc.exception).endswith(msg_suffix))
+        with self.assertRaises(TypeError) as exc:
+            @i.register
+            def _(arg):
+                return "I forgot to annotate"
+        scope = "TestSingleDispatch.test_invalid_registrations.<locals>." * six.PY3
+        self.assertTrue(str(exc.exception).startswith(msg_prefix +
+            "<function " + scope + "_"
+        ))
+        self.assertTrue(str(exc.exception).endswith(msg_suffix))
+
+        with self.assertRaises(TypeError) as exc:
+            # @i.register
+            # def _(arg: typing.Iterable[str]):
+            def _(arg):
+                # At runtime, dispatching on generics is impossible.
+                # When registering implementations with singledispatch, avoid
+                # types from `typing`. Instead, annotate with regular types
+                # or ABCs.
+                return "I annotated with a generic collection"
+            _.__annotations__ = dict(arg=typing.Iterable[str])
+            i.register(_)
+        self.assertTrue(str(exc.exception).startswith(
+            "Invalid annotation for 'arg'."
+        ))
+        self.assertTrue(str(exc.exception).endswith(
+            'typing.Iterable[' + str.__name__ + '] is not a class.'
+        ))
+
+    def test_invalid_positional_argument(self):
+        @functools.singledispatch
+        def f(*args):
+            pass
+        msg = 'f requires at least 1 positional argument'
+        with self.assertRaisesRegex(TypeError, msg):
+            f()
 
 
 def _mro_compat(classes):

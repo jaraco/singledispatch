@@ -6,12 +6,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-__all__ = ['singledispatch']
+__all__ = ['singledispatch', 'singledispatchmethod']
 
-from functools import update_wrapper
 from weakref import WeakKeyDictionary
 
-from .helpers import MappingProxyType, get_cache_token, get_type_hints
+from .helpers import MappingProxyType, get_cache_token, get_type_hints, update_wrapper
 
 ################################################################################
 ### singledispatch() - single-dispatch generic function decorator
@@ -164,6 +163,23 @@ def _find_impl(cls, registry):
             match = t
     return registry.get(match)
 
+def _validate_annotation(annotation):
+    """Determine if an annotation is valid for registration.
+
+    An annotation is considered valid for use in registration if it is an
+    instance of ``type`` and not a generic type from ``typing``.
+    """
+    try:
+        # In Python earlier than 3.7, the classes in typing are considered
+        # instances of type, but they invalid for registering single dispatch
+        # functions so check against GenericMeta instead.
+        from typing import GenericMeta
+        valid = not isinstance(annotation, GenericMeta)
+    except ImportError:
+        # In Python 3.7+, classes in typing are not instances of type.
+        valid = isinstance(annotation, type)
+    return valid
+
 def singledispatch(func):
     """Single-dispatch generic function decorator.
 
@@ -219,7 +235,7 @@ def singledispatch(func):
             func = cls
 
             argname, cls = next(iter(get_type_hints(func).items()))
-            if not isinstance(cls, type):
+            if not _validate_annotation(cls):
                 raise TypeError(
                     "Invalid annotation for {argname!r}. "
                     "{cls!r} is not a class.".format(**locals())
@@ -246,3 +262,39 @@ def singledispatch(func):
     update_wrapper(wrapper, func)
     return wrapper
 
+
+# Descriptor version
+class singledispatchmethod(object):
+    """Single-dispatch generic method descriptor.
+
+    Supports wrapping existing descriptors and handles non-descriptor
+    callables as instance methods.
+    """
+
+    def __init__(self, func):
+        if not callable(func) and not hasattr(func, "__get__"):
+            raise TypeError("{!r} is not callable or a descriptor".format(func))
+
+        self.dispatcher = singledispatch(func)
+        self.func = func
+
+    def register(self, cls, method=None):
+        """generic_method.register(cls, func) -> func
+
+        Registers a new implementation for the given *cls* on a *generic_method*.
+        """
+        return self.dispatcher.register(cls, func=method)
+
+    def __get__(self, obj, cls=None):
+        def _method(*args, **kwargs):
+            method = self.dispatcher.dispatch(args[0].__class__)
+            return method.__get__(obj, cls)(*args, **kwargs)
+
+        _method.__isabstractmethod__ = self.__isabstractmethod__
+        _method.register = self.register
+        update_wrapper(_method, self.func)
+        return _method
+
+    @property
+    def __isabstractmethod__(self):
+        return getattr(self.func, '__isabstractmethod__', False)
