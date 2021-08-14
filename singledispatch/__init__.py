@@ -163,23 +163,22 @@ def _find_impl(cls, registry):
             match = t
     return registry.get(match)
 
-def _validate_annotation(func):
+def _validate_annotation(annotation):
     """Determine if an annotation is valid for registration.
 
     An annotation is considered valid for use in registration if it is an
     instance of ``type`` and not a generic type from ``typing``.
     """
-    argname, cls = next(iter(get_type_hints(func).items()))
     try:
-        # In Python 3.5 and 3.6, the classes in typing are considered instances
-        # of type, but they aren't valid for registering single dispatch
-        # functions so we need to check against GenricMeta instead
+        # In Python earlier than 3.7, the classes in typing are considered
+        # instances of type, but they invalid for registering single dispatch
+        # functions so check against GenericMeta instead.
         from typing import GenericMeta
-        valid = not isinstance(cls, GenericMeta)
+        valid = not isinstance(annotation, GenericMeta)
     except ImportError:
-        # In Python 3.7+, classes in typing are not instances of type
-        valid = isinstance(cls, type)
-    return argname, cls, valid
+        # In Python 3.7+, classes in typing are not instances of type.
+        valid = isinstance(annotation, type)
+    return valid
 
 def singledispatch(func):
     """Single-dispatch generic function decorator.
@@ -234,8 +233,9 @@ def singledispatch(func):
                     "on an annotated function.".format(**locals())
                 )
             func = cls
-            argname, cls, valid = _validate_annotation(func)
-            if not valid:
+
+            argname, cls = next(iter(get_type_hints(func).items()))
+            if not _validate_annotation(cls):
                 raise TypeError(
                     "Invalid annotation for {argname!r}. "
                     "{cls!r} is not a class.".format(**locals())
