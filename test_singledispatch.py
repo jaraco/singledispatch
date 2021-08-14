@@ -581,8 +581,8 @@ class TestSingleDispatch(unittest.TestCase):
 
         # Registering classes as callables doesn't work with annotations,
         # you need to pass the type explicitly.
-        @i.register(six.text_type)
-        class _(object):
+        @i.register(str)
+        class _:
             def __init__(self, arg):
                 self.arg = arg
 
