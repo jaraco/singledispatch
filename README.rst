@@ -30,8 +30,8 @@ This library is a backport of this functionality and its evolution.
 Refer to the `upstream documentation
 <http://docs.python.org/3/library/functools.html#functools.singledispatch>`_
 for API guidance. To use the backport, simply use
-``from singledispatch import singledispatch`` in place of
-``from functools import singledispatch``.
+``from singledispatch import singledispatch, singledispatchmethod`` in place of
+``from functools import singledispatch, singledispatchmethod``.
 
 
 
