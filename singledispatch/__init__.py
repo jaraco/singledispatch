@@ -16,6 +16,7 @@ from .helpers import MappingProxyType, get_cache_token, get_type_hints, update_w
 ### singledispatch() - single-dispatch generic function decorator
 ################################################################################
 
+
 def _c3_merge(sequences):
     """Merges MROs in *sequences* to a single MRO using the C3 algorithm.
 
@@ -24,15 +25,15 @@ def _c3_merge(sequences):
     """
     result = []
     while True:
-        sequences = [s for s in sequences if s]   # purge empty sequences
+        sequences = [s for s in sequences if s]  # purge empty sequences
         if not sequences:
             return result
-        for s1 in sequences:   # find merge candidates among seq heads
+        for s1 in sequences:  # find merge candidates among seq heads
             candidate = s1[0]
             for s2 in sequences:
                 if candidate in s2[1:]:
                     candidate = None
-                    break      # reject the current head, it appears later
+                    break  # reject the current head, it appears later
             else:
                 break
         if candidate is None:
@@ -42,6 +43,7 @@ def _c3_merge(sequences):
         for seq in sequences:
             if seq[0] == candidate:
                 del seq[0]
+
 
 def _c3_mro(cls, abcs=None):
     """Computes the method resolution order using extended C3 linearization.
@@ -63,7 +65,7 @@ def _c3_mro(cls, abcs=None):
     for i, base in enumerate(reversed(cls.__bases__)):
         if hasattr(base, '__abstractmethods__'):
             boundary = len(cls.__bases__) - i
-            break   # Bases up to the last explicit ABC are considered first.
+            break  # Bases up to the last explicit ABC are considered first.
     else:
         boundary = 0
     abcs = list(abcs) if abcs else []
@@ -72,8 +74,8 @@ def _c3_mro(cls, abcs=None):
     other_bases = list(cls.__bases__[boundary:])
     for base in abcs:
         if issubclass(cls, base) and not any(
-                issubclass(b, base) for b in cls.__bases__
-            ):
+            issubclass(b, base) for b in cls.__bases__
+        ):
             # If *cls* is the class that introduces behaviour described by
             # an ABC *base*, insert said ABC to its MRO.
             abstract_bases.append(base)
@@ -83,10 +85,15 @@ def _c3_mro(cls, abcs=None):
     abstract_c3_mros = [_c3_mro(base, abcs=abcs) for base in abstract_bases]
     other_c3_mros = [_c3_mro(base, abcs=abcs) for base in other_bases]
     return _c3_merge(
-        [[cls]] +
-        explicit_c3_mros + abstract_c3_mros + other_c3_mros +
-        [explicit_bases] + [abstract_bases] + [other_bases]
+        [[cls]]
+        + explicit_c3_mros
+        + abstract_c3_mros
+        + other_c3_mros
+        + [explicit_bases]
+        + [abstract_bases]
+        + [other_bases]
     )
+
 
 def _compose_mro(cls, types):
     """Calculates the method resolution order for a given class *cls*.
@@ -98,8 +105,8 @@ def _compose_mro(cls, types):
     bases = set(cls.__mro__)
     # Remove entries which are already present in the __mro__ or unrelated.
     def is_related(typ):
-        return (typ not in bases and hasattr(typ, '__mro__')
-                                 and issubclass(cls, typ))
+        return typ not in bases and hasattr(typ, '__mro__') and issubclass(cls, typ)
+
     types = [n for n in types if is_related(n)]
     # Remove entries which are strict bases of other entries (they will end up
     # in the MRO anyway.
@@ -108,6 +115,7 @@ def _compose_mro(cls, types):
             if typ != other and typ in other.__mro__:
                 return True
         return False
+
     types = [n for n in types if not is_strict_base(n)]
     # Subclasses of the ABCs in *types* which are also implemented by
     # *cls* can be used to stabilize ABC ordering.
@@ -153,15 +161,18 @@ def _find_impl(cls, registry):
         if match is not None:
             # If *match* is an implicit ABC but there is another unrelated,
             # equally matching implicit ABC, refuse the temptation to guess.
-            if (t in registry and t not in cls.__mro__
-                              and match not in cls.__mro__
-                              and not issubclass(match, t)):
-                raise RuntimeError("Ambiguous dispatch: {0} or {1}".format(
-                    match, t))
+            if (
+                t in registry
+                and t not in cls.__mro__
+                and match not in cls.__mro__
+                and not issubclass(match, t)
+            ):
+                raise RuntimeError("Ambiguous dispatch: {0} or {1}".format(match, t))
             break
         if t in registry:
             match = t
     return registry.get(match)
+
 
 def _validate_annotation(annotation):
     """Determine if an annotation is valid for registration.
@@ -174,11 +185,13 @@ def _validate_annotation(annotation):
         # instances of type, but they invalid for registering single dispatch
         # functions so check against GenericMeta instead.
         from typing import GenericMeta
+
         valid = not isinstance(annotation, GenericMeta)
     except ImportError:
         # In Python 3.7+, classes in typing are not instances of type.
         valid = isinstance(annotation, type)
     return valid
+
 
 def singledispatch(func):
     """Single-dispatch generic function decorator.
@@ -191,7 +204,10 @@ def singledispatch(func):
     """
     registry = {}
     dispatch_cache = WeakKeyDictionary()
-    def ns(): pass
+
+    def ns():
+        pass
+
     ns.cache_token = None
 
     def dispatch(cls):
@@ -248,8 +264,9 @@ def singledispatch(func):
 
     def wrapper(*args, **kw):
         if not args:
-            raise TypeError('{0} requires at least '
-                            '1 positional argument'.format(funcname))
+            raise TypeError(
+                '{0} requires at least ' '1 positional argument'.format(funcname)
+            )
 
         return dispatch(args[0].__class__)(*args, **kw)
 

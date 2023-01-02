@@ -59,7 +59,7 @@ def recursive_repr(fillvalue='...'):
 
 
 class ChainMap(MutableMapping):
-    ''' A ChainMap groups multiple dicts (or other mappings) together
+    '''A ChainMap groups multiple dicts (or other mappings) together
     to create a single, updateable view.
 
     The underlying mappings are stored in a list.  That list is public and can
@@ -76,7 +76,7 @@ class ChainMap(MutableMapping):
         If no mappings are provided, a single empty dictionary is used.
 
         '''
-        self.maps = list(maps) or [{}]          # always at least one map
+        self.maps = list(maps) or [{}]  # always at least one map
 
     def __missing__(self, key):
         raise KeyError(key)
@@ -84,16 +84,16 @@ class ChainMap(MutableMapping):
     def __getitem__(self, key):
         for mapping in self.maps:
             try:
-                return mapping[key]             # can't use 'key in mapping' with defaultdict
+                return mapping[key]  # can't use 'key in mapping' with defaultdict
             except KeyError:
                 pass
-        return self.__missing__(key)            # support subclasses that define __missing__
+        return self.__missing__(key)  # support subclasses that define __missing__
 
     def get(self, key, default=None):
         return self[key] if key in self else default
 
     def __len__(self):
-        return len(set().union(*self.maps))     # reuses stored hash values if possible
+        return len(set().union(*self.maps))  # reuses stored hash values if possible
 
     def __iter__(self):
         return iter(set().union(*self.maps))
@@ -104,7 +104,8 @@ class ChainMap(MutableMapping):
     @recursive_repr()
     def __repr__(self):
         return '{0.__class__.__name__}({1})'.format(
-            self, ', '.join(map(repr, self.maps)))
+            self, ', '.join(map(repr, self.maps))
+        )
 
     @classmethod
     def fromkeys(cls, iterable, *args):
@@ -117,12 +118,12 @@ class ChainMap(MutableMapping):
 
     __copy__ = copy
 
-    def new_child(self):                        # like Django's Context.push()
+    def new_child(self):  # like Django's Context.push()
         'New ChainMap with a new dict followed by all previous maps.'
         return self.__class__({}, *self.maps)
 
     @property
-    def parents(self):                          # like Django's Context.pop()
+    def parents(self):  # like Django's Context.pop()
         'New ChainMap from maps[1:].'
         return self.__class__(*self.maps[1:])
 
@@ -163,6 +164,7 @@ class MappingProxyType(UserDict):
 try:
     from abc import get_cache_token
 except ImportError:
+
     def get_cache_token():
         return ABCMeta._abc_invalidation_counter
 
@@ -180,26 +182,33 @@ class Support(object):
 def get_type_hints(func):
     # only import typing if annotation parsing is necessary
     from typing import get_type_hints
+
     return get_type_hints(func) or getattr(func, '__annotations__', {})
 
 
-WRAPPER_ASSIGNMENTS = ('__module__', '__name__', '__qualname__', '__doc__',
-                       '__annotations__')
+WRAPPER_ASSIGNMENTS = (
+    '__module__',
+    '__name__',
+    '__qualname__',
+    '__doc__',
+    '__annotations__',
+)
 WRAPPER_UPDATES = ('__dict__',)
-def update_wrapper(wrapper,
-                   wrapped,
-                   assigned = WRAPPER_ASSIGNMENTS,
-                   updated = WRAPPER_UPDATES):
+
+
+def update_wrapper(
+    wrapper, wrapped, assigned=WRAPPER_ASSIGNMENTS, updated=WRAPPER_UPDATES
+):
     """Update a wrapper function to look like the wrapped function
 
-       wrapper is the function to be updated
-       wrapped is the original function
-       assigned is a tuple naming the attributes assigned directly
-       from the wrapped function to the wrapper function (defaults to
-       functools.WRAPPER_ASSIGNMENTS)
-       updated is a tuple naming the attributes of the wrapper that
-       are updated with the corresponding attribute from the wrapped
-       function (defaults to functools.WRAPPER_UPDATES)
+    wrapper is the function to be updated
+    wrapped is the original function
+    assigned is a tuple naming the attributes assigned directly
+    from the wrapped function to the wrapper function (defaults to
+    functools.WRAPPER_ASSIGNMENTS)
+    updated is a tuple naming the attributes of the wrapper that
+    are updated with the corresponding attribute from the wrapped
+    function (defaults to functools.WRAPPER_UPDATES)
     """
     for attr in assigned:
         try:

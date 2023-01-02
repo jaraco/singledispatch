@@ -15,15 +15,18 @@ import singledispatch as functools
 from singledispatch.helpers import Support
 import typing
 import six
+
 try:
     from collections import ChainMap
 except ImportError:
     from singledispatch.helpers import ChainMap
+
     collections.ChainMap = ChainMap
 try:
     from collections import OrderedDict
 except ImportError:
     from singledispatch.helpers import OrderedDict
+
     collections.OrderedDict = OrderedDict
 try:
     import unittest2 as unittest
@@ -51,29 +54,38 @@ class TestSingleDispatch(unittest.TestCase):
         @functools.singledispatch
         def g(obj):
             return "base"
+
         def g_int(i):
             return "integer"
+
         g.register(int, g_int)
         self.assertEqual(g("str"), "base")
         self.assertEqual(g(1), "integer")
-        self.assertEqual(g([1,2,3]), "base")
+        self.assertEqual(g([1, 2, 3]), "base")
 
     def test_mro(self):
         @functools.singledispatch
         def g(obj):
             return "base"
+
         class A(object):
             pass
+
         class C(A):
             pass
+
         class B(A):
             pass
+
         class D(C, B):
             pass
+
         def g_A(a):
             return "A"
+
         def g_B(b):
             return "B"
+
         g.register(A, g_A)
         g.register(B, g_B)
         self.assertEqual(g(A()), "A")
@@ -85,9 +97,11 @@ class TestSingleDispatch(unittest.TestCase):
         @functools.singledispatch
         def g(obj):
             return "base"
+
         @g.register(int)
         def g_int(i):
             return "int %s" % (i,)
+
         self.assertEqual(g(""), "base")
         self.assertEqual(g(12), "int 12")
         self.assertIs(g.dispatch(int), g_int)
@@ -100,6 +114,7 @@ class TestSingleDispatch(unittest.TestCase):
         def g(obj):
             "Simple test"
             return "Test"
+
         self.assertEqual(g.__name__, "g")
         self.assertEqual(g.__doc__, "Simple test")
 
@@ -109,16 +124,20 @@ class TestSingleDispatch(unittest.TestCase):
         @functools.singledispatch
         def g(obj):
             return "base"
+
         @g.register(decimal.DecimalException)
         def _(obj):
             return obj.args
+
         subn = decimal.Subnormal("Exponent < Emin")
         rnd = decimal.Rounded("Number got rounded")
         self.assertEqual(g(subn), ("Exponent < Emin",))
         self.assertEqual(g(rnd), ("Number got rounded",))
+
         @g.register(decimal.Subnormal)
         def _(obj):
             return "Too small to care."
+
         self.assertEqual(g(subn), "Too small to care.")
         self.assertEqual(g(rnd), ("Number got rounded",))
 
@@ -129,16 +148,32 @@ class TestSingleDispatch(unittest.TestCase):
         bases = [c.Sequence, c.MutableMapping, c.Mapping, c.Set]
         for haystack in permutations(bases):
             m = mro(dict, haystack)
-            expected = _mro_compat([
-                dict, c.MutableMapping, c.Mapping, c.Sized,
-                c.Iterable, c.Container, object])
+            expected = _mro_compat(
+                [
+                    dict,
+                    c.MutableMapping,
+                    c.Mapping,
+                    c.Sized,
+                    c.Iterable,
+                    c.Container,
+                    object,
+                ]
+            )
             self.assertEqual(m, expected)
         bases = [c.Container, c.Mapping, c.MutableMapping, collections.OrderedDict]
         for haystack in permutations(bases):
             m = mro(collections.ChainMap, haystack)
-            expected = _mro_compat([
-                collections.ChainMap, c.MutableMapping, c.Mapping,
-                c.Sized, c.Iterable, c.Container, object])
+            expected = _mro_compat(
+                [
+                    collections.ChainMap,
+                    c.MutableMapping,
+                    c.Mapping,
+                    c.Sized,
+                    c.Iterable,
+                    c.Container,
+                    object,
+                ]
+            )
             self.assertEqual(m, expected)
 
         # If there's a generic function with implementations registered for
@@ -148,23 +183,35 @@ class TestSingleDispatch(unittest.TestCase):
         bases = [c.Container, c.Sized, str]
         for haystack in permutations(bases):
             m = mro(collections.defaultdict, [c.Sized, c.Container, str])
-            self.assertEqual(m, [collections.defaultdict, dict, c.Sized, c.Container,
-                                 object])
+            self.assertEqual(
+                m, [collections.defaultdict, dict, c.Sized, c.Container, object]
+            )
 
         # MutableSequence below is registered directly on D. In other words, it
         # preceeds MutableMapping which means single dispatch will always
         # choose MutableSequence here.
         class D(collections.defaultdict):
             pass
+
         c.MutableSequence.register(D)
         bases = [c.MutableSequence, c.MutableMapping]
         for haystack in permutations(bases):
             m = mro(D, bases)
-            expected = _mro_compat([
-                D, c.MutableSequence, c.Sequence,
-                collections.defaultdict, dict, c.MutableMapping,
-                c.Mapping, c.Sized, c.Iterable, c.Container,
-                object])
+            expected = _mro_compat(
+                [
+                    D,
+                    c.MutableSequence,
+                    c.Sequence,
+                    collections.defaultdict,
+                    dict,
+                    c.MutableMapping,
+                    c.Mapping,
+                    c.Sized,
+                    c.Iterable,
+                    c.Container,
+                    object,
+                ]
+            )
             self.assertEqual(m, expected)
 
         # Container and Callable are registered on different base classes and
@@ -173,12 +220,23 @@ class TestSingleDispatch(unittest.TestCase):
         class C(collections.defaultdict):
             def __call__(self):
                 pass
+
         bases = [c.Sized, c.Callable, c.Container, c.Mapping]
         for haystack in permutations(bases):
             m = mro(C, haystack)
-            expected = _mro_compat([
-                C, c.Callable, collections.defaultdict, dict, c.Mapping,
-                c.Sized, c.Iterable, c.Container, object])
+            expected = _mro_compat(
+                [
+                    C,
+                    c.Callable,
+                    collections.defaultdict,
+                    dict,
+                    c.Mapping,
+                    c.Sized,
+                    c.Iterable,
+                    c.Container,
+                    object,
+                ]
+            )
             self.assertEqual(m, expected)
 
     def test_register_abc(self):
@@ -188,9 +246,11 @@ class TestSingleDispatch(unittest.TestCase):
         s = set([object(), None])
         f = frozenset(s)
         t = (1, 2, 3)
+
         @functools.singledispatch
         def g(obj):
             return "base"
+
         self.assertEqual(g(d), "base")
         self.assertEqual(g(l), "base")
         self.assertEqual(g(s), "base")
@@ -278,20 +338,27 @@ class TestSingleDispatch(unittest.TestCase):
     def test_c3_abc(self):
         c = coll_abc
         mro = functools._c3_mro
+
         class A(object):
             pass
+
         class B(A):
             def __len__(self):
-                return 0   # implies Sized
-        #@c.Container.register
+                return 0  # implies Sized
+
+        # @c.Container.register
         class C(object):
             pass
+
         c.Container.register(C)
+
         class D(object):
-            pass   # unrelated
+            pass  # unrelated
+
         class X(D, C, B):
             def __call__(self):
-                pass   # implies Callable
+                pass  # implies Callable
+
         expected = [X, c.Callable, D, C, c.Container, B, c.Sized, A, object]
         for abcs in permutations([c.Sized, c.Callable, c.Container]):
             self.assertEqual(mro(X, abcs=abcs), expected)
@@ -304,34 +371,44 @@ class TestSingleDispatch(unittest.TestCase):
         class MetaA(type):
             def __len__(self):
                 return 0
+
         if sys.version_info < (3,):
+
             class A(object):
                 __metaclass__ = MetaA
+
         else:
             """
             class A(metaclass=MetaA):
                 pass
             """
             A = MetaA('A', (), {})
+
         class AA(A):
             pass
+
         @functools.singledispatch
         def fun(a):
             return 'base A'
+
         @fun.register(A)
         def _(a):
             return 'fun A'
+
         aa = AA()
         self.assertEqual(fun(aa), 'fun A')
 
     def test_mro_conflicts(self):
         c = coll_abc
+
         @functools.singledispatch
         def g(arg):
             return "base"
+
         class O(c.Sized):
             def __len__(self):
                 return 0
+
         o = O()
         self.assertEqual(g(o), "base")
         g.register(c.Iterable, lambda arg: "iterable")
@@ -340,14 +417,15 @@ class TestSingleDispatch(unittest.TestCase):
         g.register(c.Set, lambda arg: "set")
         self.assertEqual(g(o), "sized")
         c.Iterable.register(O)
-        self.assertEqual(g(o), "sized")   # because it's explicitly in __mro__
+        self.assertEqual(g(o), "sized")  # because it's explicitly in __mro__
         c.Container.register(O)
-        self.assertEqual(g(o), "sized")   # see above: Sized is in __mro__
+        self.assertEqual(g(o), "sized")  # see above: Sized is in __mro__
         c.Set.register(O)
-        self.assertEqual(g(o), "set")     # because c.Set is a subclass of
-                                          # c.Sized and c.Container
+        self.assertEqual(g(o), "set")  # because c.Set is a subclass of
+        # c.Sized and c.Container
         class P(object):
             pass
+
         p = P()
         self.assertEqual(g(p), "base")
         c.Iterable.register(P)
@@ -357,30 +435,41 @@ class TestSingleDispatch(unittest.TestCase):
             g(p)
         self.assertIn(
             str(re_one.exception),
-            (("Ambiguous dispatch: <class '{prefix}.Container'> "
-              "or <class '{prefix}.Iterable'>").format(prefix=abcoll_prefix),
-             ("Ambiguous dispatch: <class '{prefix}.Iterable'> "
-              "or <class '{prefix}.Container'>").format(prefix=abcoll_prefix)),
+            (
+                (
+                    "Ambiguous dispatch: <class '{prefix}.Container'> "
+                    "or <class '{prefix}.Iterable'>"
+                ).format(prefix=abcoll_prefix),
+                (
+                    "Ambiguous dispatch: <class '{prefix}.Iterable'> "
+                    "or <class '{prefix}.Container'>"
+                ).format(prefix=abcoll_prefix),
+            ),
         )
+
         class Q(c.Sized):
             def __len__(self):
                 return 0
+
         q = Q()
         self.assertEqual(g(q), "sized")
         c.Iterable.register(Q)
-        self.assertEqual(g(q), "sized")   # because it's explicitly in __mro__
+        self.assertEqual(g(q), "sized")  # because it's explicitly in __mro__
         c.Set.register(Q)
-        self.assertEqual(g(q), "set")     # because c.Set is a subclass of
-                                          # c.Sized and c.Iterable
+        self.assertEqual(g(q), "set")  # because c.Set is a subclass of
+        # c.Sized and c.Iterable
         @functools.singledispatch
         def h(arg):
             return "base"
+
         @h.register(c.Sized)
         def _(arg):
             return "sized"
+
         @h.register(c.Container)
         def _(arg):
             return "container"
+
         # Even though Sized and Container are explicit bases of MutableMapping,
         # this ABC is implicitly registered on defaultdict which makes all of
         # MutableMapping's bases implicit as well from defaultdict's
@@ -389,95 +478,130 @@ class TestSingleDispatch(unittest.TestCase):
             h(collections.defaultdict(lambda: 0))
         self.assertIn(
             str(re_two.exception),
-            (("Ambiguous dispatch: <class '{prefix}.Container'> "
-              "or <class '{prefix}.Sized'>").format(prefix=abcoll_prefix),
-             ("Ambiguous dispatch: <class '{prefix}.Sized'> "
-              "or <class '{prefix}.Container'>").format(prefix=abcoll_prefix)),
+            (
+                (
+                    "Ambiguous dispatch: <class '{prefix}.Container'> "
+                    "or <class '{prefix}.Sized'>"
+                ).format(prefix=abcoll_prefix),
+                (
+                    "Ambiguous dispatch: <class '{prefix}.Sized'> "
+                    "or <class '{prefix}.Container'>"
+                ).format(prefix=abcoll_prefix),
+            ),
         )
+
         class R(collections.defaultdict):
             pass
+
         c.MutableSequence.register(R)
+
         @functools.singledispatch
         def i(arg):
             return "base"
+
         @i.register(c.MutableMapping)
         def _(arg):
             return "mapping"
+
         @i.register(c.MutableSequence)
         def _(arg):
             return "sequence"
+
         r = R()
         self.assertEqual(i(r), "sequence")
+
         class S(object):
             pass
+
         class T(S, c.Sized):
             def __len__(self):
                 return 0
+
         t = T()
         self.assertEqual(h(t), "sized")
         c.Container.register(T)
-        self.assertEqual(h(t), "sized")   # because it's explicitly in the MRO
+        self.assertEqual(h(t), "sized")  # because it's explicitly in the MRO
+
         class U(object):
             def __len__(self):
                 return 0
+
         u = U()
-        self.assertEqual(h(u), "sized")   # implicit Sized subclass inferred
-                                          # from the existence of __len__()
+        self.assertEqual(h(u), "sized")  # implicit Sized subclass inferred
+        # from the existence of __len__()
         c.Container.register(U)
         # There is no preference for registered versus inferred ABCs.
         with self.assertRaises(RuntimeError) as re_three:
             h(u)
         self.assertIn(
             str(re_three.exception),
-            (("Ambiguous dispatch: <class '{prefix}.Container'> "
-              "or <class '{prefix}.Sized'>").format(prefix=abcoll_prefix),
-             ("Ambiguous dispatch: <class '{prefix}.Sized'> "
-              "or <class '{prefix}.Container'>").format(prefix=abcoll_prefix)),
+            (
+                (
+                    "Ambiguous dispatch: <class '{prefix}.Container'> "
+                    "or <class '{prefix}.Sized'>"
+                ).format(prefix=abcoll_prefix),
+                (
+                    "Ambiguous dispatch: <class '{prefix}.Sized'> "
+                    "or <class '{prefix}.Container'>"
+                ).format(prefix=abcoll_prefix),
+            ),
         )
+
         class V(c.Sized, S):
             def __len__(self):
                 return 0
+
         @functools.singledispatch
         def j(arg):
             return "base"
+
         @j.register(S)
         def _(arg):
             return "s"
+
         @j.register(c.Container)
         def _(arg):
             return "container"
+
         v = V()
         self.assertEqual(j(v), "s")
         c.Container.register(V)
-        self.assertEqual(j(v), "container")   # because it ends up right after
-                                              # Sized in the MRO
+        self.assertEqual(j(v), "container")  # because it ends up right after
+        # Sized in the MRO
 
     def test_cache_invalidation(self):
         try:
             from collections import UserDict
         except ImportError:
             from UserDict import UserDict
+
         class TracingDict(UserDict):
             def __init__(self, *args, **kwargs):
                 UserDict.__init__(self, *args, **kwargs)
                 self.set_ops = []
                 self.get_ops = []
+
             def __getitem__(self, key):
                 result = self.data[key]
                 self.get_ops.append(key)
                 return result
+
             def __setitem__(self, key, value):
                 self.set_ops.append(key)
                 self.data[key] = value
+
             def clear(self):
                 self.data.clear()
+
         _orig_wkd = functools.WeakKeyDictionary
         td = TracingDict()
         functools.WeakKeyDictionary = lambda: td
         c = coll_abc
+
         @functools.singledispatch
         def g(arg):
             return "base"
+
         d = {}
         l = []
         self.assertEqual(len(td), 0)
@@ -504,18 +628,18 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertEqual(len(td), 1)
         self.assertEqual(td.get_ops, [list, dict])
         self.assertEqual(td.set_ops, [dict, list, dict])
-        self.assertEqual(td.data[dict],
-                         functools._find_impl(dict, g.registry))
+        self.assertEqual(td.data[dict], functools._find_impl(dict, g.registry))
         self.assertEqual(g(l), "list")
         self.assertEqual(len(td), 2)
         self.assertEqual(td.get_ops, [list, dict])
         self.assertEqual(td.set_ops, [dict, list, dict, list])
-        self.assertEqual(td.data[list],
-                         functools._find_impl(list, g.registry))
+        self.assertEqual(td.data[list], functools._find_impl(list, g.registry))
+
         class X(object):
             pass
-        c.MutableMapping.register(X)   # Will not invalidate the cache,
-                                       # not using ABCs yet.
+
+        c.MutableMapping.register(X)  # Will not invalidate the cache,
+        # not using ABCs yet.
         self.assertEqual(g(d), "base")
         self.assertEqual(g(l), "list")
         self.assertEqual(td.get_ops, [list, dict, dict, list])
@@ -536,11 +660,10 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertEqual(td.set_ops, [dict, list, dict, list, dict, list])
         g.dispatch(list)
         g.dispatch(dict)
-        self.assertEqual(td.get_ops, [list, dict, dict, list, list, dict,
-                                      list, dict])
+        self.assertEqual(td.get_ops, [list, dict, dict, list, list, dict, list, dict])
         self.assertEqual(td.set_ops, [dict, list, dict, list, dict, list])
-        c.MutableSet.register(X)       # Will invalidate the cache.
-        self.assertEqual(len(td), 2)   # Stale cache.
+        c.MutableSet.register(X)  # Will invalidate the cache.
+        self.assertEqual(len(td), 2)  # Stale cache.
         self.assertEqual(g(l), "list")
         self.assertEqual(len(td), 1)
         g.register(c.MutableMapping, lambda arg: "mutablemapping")
@@ -560,16 +683,19 @@ class TestSingleDispatch(unittest.TestCase):
         @functools.singledispatch
         def i(arg):
             return "base"
-        #@i.register
-        #def _(arg: collections.abc.Mapping)
+
+        # @i.register
+        # def _(arg: collections.abc.Mapping)
         def _(arg):
             return "mapping"
+
         _.__annotations__ = dict(arg=coll_abc.Mapping)
         i.register(_)
-        #@i.register
-        #def _(arg: "collections.abc.Sequence"):
+        # @i.register
+        # def _(arg: "collections.abc.Sequence"):
         def _(arg):
             return "sequence"
+
         _.__annotations__ = dict(arg=coll_abc.Sequence)
         i.register(_)
         self.assertEqual(i(None), "base")
@@ -591,6 +717,7 @@ class TestSingleDispatch(unittest.TestCase):
 
             def __eq__(self, other):
                 return self.arg == other
+
         self.assertEqual(i("str"), "str")
 
     def test_method_register(self):
@@ -598,12 +725,15 @@ class TestSingleDispatch(unittest.TestCase):
             @functools.singledispatchmethod
             def t(self, arg):
                 self.arg = "base"
+
             @t.register(int)
             def _(self, arg):
                 self.arg = "int"
+
             @t.register(str)
             def _(self, arg):
                 self.arg = "str"
+
         a = A()
 
         a.t(0)
@@ -625,14 +755,17 @@ class TestSingleDispatch(unittest.TestCase):
             @staticmethod
             def t(arg):
                 return arg
+
             @t.register(int)
             @staticmethod
             def _(arg):
                 return isinstance(arg, int)
+
             @t.register(str)
             @staticmethod
             def _(arg):
                 return isinstance(arg, str)
+
         a = A()
 
         self.assertTrue(A.t(0))
@@ -648,10 +781,12 @@ class TestSingleDispatch(unittest.TestCase):
             @classmethod
             def t(cls, arg):
                 return cls("base")
+
             @t.register(int)
             @classmethod
             def _(cls, arg):
                 return cls("int")
+
             @t.register(str)
             @classmethod
             def _(cls, arg):
@@ -675,6 +810,7 @@ class TestSingleDispatch(unittest.TestCase):
         @classmethod
         def _(cls, arg):
             return cls("int")
+
         @A.t.register(str)
         @classmethod
         def _(cls, arg):
@@ -686,7 +822,6 @@ class TestSingleDispatch(unittest.TestCase):
 
     def test_abstractmethod_register(self):
         class Abstract(abc.ABCMeta):
-
             @functools.singledispatchmethod
             @abc.abstractmethod
             def add(self, x, y):
@@ -699,16 +834,19 @@ class TestSingleDispatch(unittest.TestCase):
             @functools.singledispatchmethod
             def t(self, arg):
                 return "base"
+
             # @t.register
             # def _(self, arg: int):
             def _(self, arg):
                 return "int"
+
             _.__annotations__ = dict(arg=int)
             t.register(_)
             # @t.register
             # def _(self, arg: str):
             def _(self, arg):
                 return "str"
+
             _.__annotations__ = dict(arg=str)
             t.register(_)
 
@@ -724,23 +862,29 @@ class TestSingleDispatch(unittest.TestCase):
             ". Use either `@register(some_class)` or plain `@register` on an "
             "annotated function."
         )
+
         @functools.singledispatch
         def i(arg):
             return "base"
+
         with self.assertRaises(TypeError) as exc:
+
             @i.register(42)
             def _(arg):
                 return "I annotated with a non-type"
+
         self.assertTrue(str(exc.exception).startswith(msg_prefix + "42"))
         self.assertTrue(str(exc.exception).endswith(msg_suffix))
         with self.assertRaises(TypeError) as exc:
+
             @i.register
             def _(arg):
                 return "I forgot to annotate"
+
         scope = "TestSingleDispatch.test_invalid_registrations.<locals>." * six.PY3
-        self.assertTrue(str(exc.exception).startswith(msg_prefix +
-            "<function " + scope + "_"
-        ))
+        self.assertTrue(
+            str(exc.exception).startswith(msg_prefix + "<function " + scope + "_")
+        )
         self.assertTrue(str(exc.exception).endswith(msg_suffix))
 
         with self.assertRaises(TypeError) as exc:
@@ -752,19 +896,21 @@ class TestSingleDispatch(unittest.TestCase):
                 # types from `typing`. Instead, annotate with regular types
                 # or ABCs.
                 return "I annotated with a generic collection"
+
             _.__annotations__ = dict(arg=typing.Iterable[str])
             i.register(_)
-        self.assertTrue(str(exc.exception).startswith(
-            "Invalid annotation for 'arg'."
-        ))
-        self.assertTrue(str(exc.exception).endswith(
-            'typing.Iterable[' + str.__name__ + '] is not a class.'
-        ))
+        self.assertTrue(str(exc.exception).startswith("Invalid annotation for 'arg'."))
+        self.assertTrue(
+            str(exc.exception).endswith(
+                'typing.Iterable[' + str.__name__ + '] is not a class.'
+            )
+        )
 
     def test_invalid_positional_argument(self):
         @functools.singledispatch
         def f(*args):
             pass
+
         msg = 'f requires at least 1 positional argument'
         with self.assertRaisesRegex(TypeError, msg):
             f()
@@ -776,6 +922,7 @@ def _mro_compat(classes):
     coll_idx = classes.index(coll_abc.Mapping) + 1
     classes[coll_idx:coll_idx] = [coll_abc.Collection]
     import contextlib
+
     with contextlib.suppress(ValueError):
         rev_idx = classes.index(coll_abc.Sequence) + 1
         classes[rev_idx:rev_idx] = [coll_abc.Reversible]
