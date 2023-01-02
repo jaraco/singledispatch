@@ -3,6 +3,8 @@ v4.0.0
 
 Require Python 3.7 or later.
 
+Incorporate Tidelift sponsorship.
+
 v3.7.0
 ======
 

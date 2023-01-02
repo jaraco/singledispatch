@@ -17,6 +17,9 @@
 .. image:: https://img.shields.io/badge/skeleton-2022-informational
    :target: https://blog.jaraco.com/skeleton
 
+.. image:: https://tidelift.com/badges/package/pypi/singledispatch
+   :target: https://tidelift.com/subscription/pkg/pypi-singledispatch?utm_source=pypi-singledispatch&utm_medium=readme
+
 `PEP 443 <http://www.python.org/dev/peps/pep-0443/>`_ proposed to expose
 a mechanism in the ``functools`` standard library module in Python 3.4
 that provides a simple form of generic programming known as
@@ -31,9 +34,8 @@ for API guidance. To use the backport, simply use
 ``from functools import singledispatch, singledispatchmethod``.
 
 
-
 Maintenance
------------
+===========
 
 This backport is maintained on Github by Jason R. Coombs, one of the
 members of the core CPython team:
@@ -41,3 +43,19 @@ members of the core CPython team:
 * `repository <https://github.com/jaraco/singledispatch>`_
 
 * `issue tracker <https://github.com/jaraco/singledispatch/issues>`_
+
+For Enterprise
+==============
+
+Available as part of the Tidelift Subscription.
+
+This project and the maintainers of thousands of other packages are working with Tidelift to deliver one enterprise subscription that covers all of the open source you use.
+
+`Learn more <https://tidelift.com/subscription/pkg/pypi-singledispatch?utm_source=pypi-singledispatch&utm_medium=referral&utm_campaign=github>`_.
+
+Security Contact
+================
+
+To report a security vulnerability, please use the
+`Tidelift security contact <https://tidelift.com/security>`_.
+Tidelift will coordinate the fix and disclosure.

@@ -6,6 +6,7 @@ Welcome to |project| documentation!
 
    history
 
+.. tidelift-referral-banner::
 
 .. automodule:: singledispatch
     :members:

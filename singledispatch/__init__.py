@@ -247,8 +247,7 @@ def singledispatch(func):  # noqa: C901
             argname, cls = next(iter(get_type_hints(func).items()))
             if not _validate_annotation(cls):
                 raise TypeError(
-                    f"Invalid annotation for {argname!r}. "
-                    f"{cls!r} is not a class."
+                    f"Invalid annotation for {argname!r}. " f"{cls!r} is not a class."
                 )
         registry[cls] = func
         if ns.cache_token is None and hasattr(cls, '__abstractmethods__'):
