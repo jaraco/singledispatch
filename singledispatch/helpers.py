@@ -116,7 +116,7 @@ class ChainMap(MutableMapping):
         try:
             del self.maps[0][key]
         except KeyError:
-            raise KeyError('Key not found in the first mapping: {!r}'.format(key))
+            raise KeyError(f'Key not found in the first mapping: {key!r}')
 
     def popitem(self):
         """
@@ -135,7 +135,7 @@ class ChainMap(MutableMapping):
         try:
             return self.maps[0].pop(key, *args)
         except KeyError:
-            raise KeyError('Key not found in the first mapping: {!r}'.format(key))
+            raise KeyError(f'Key not found in the first mapping: {key!r}')
 
     def clear(self):
         'Clear maps[0], leaving maps[1:] intact.'
@@ -151,7 +151,7 @@ class MappingProxyType(UserDict):
 from abc import get_cache_token  # noqa: E402, F401
 
 
-class Support(object):
+class Support:
     def dummy(self):
         pass
 

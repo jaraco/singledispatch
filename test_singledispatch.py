@@ -21,7 +21,7 @@ else:
 del _prefix
 
 
-str = type("")
+str = str
 
 
 class TestSingleDispatch(unittest.TestCase):
@@ -43,7 +43,7 @@ class TestSingleDispatch(unittest.TestCase):
         def g(obj):
             return "base"
 
-        class A(object):
+        class A:
             pass
 
         class C(A):
@@ -75,7 +75,7 @@ class TestSingleDispatch(unittest.TestCase):
 
         @g.register(int)
         def g_int(i):
-            return "int %s" % (i,)
+            return "int {}".format(i)
 
         self.assertEqual(g(""), "base")
         self.assertEqual(g(12), "int 12")
@@ -218,7 +218,7 @@ class TestSingleDispatch(unittest.TestCase):
         c = coll_abc
         d = {"a": "b"}
         ls = [1, 2, 3]
-        s = set([object(), None])
+        s = {object(), None}
         f = frozenset(s)
         t = (1, 2, 3)
 
@@ -314,7 +314,7 @@ class TestSingleDispatch(unittest.TestCase):
         c = coll_abc
         mro = functools._c3_mro
 
-        class A(object):
+        class A:
             pass
 
         class B(A):
@@ -322,12 +322,12 @@ class TestSingleDispatch(unittest.TestCase):
                 return 0  # implies Sized
 
         # @c.Container.register
-        class C(object):
+        class C:
             pass
 
         c.Container.register(C)
 
-        class D(object):
+        class D:
             pass  # unrelated
 
         class X(D, C, B):
@@ -347,17 +347,11 @@ class TestSingleDispatch(unittest.TestCase):
             def __len__(self):
                 return 0
 
-        if sys.version_info < (3,):
-
-            class A(object):
-                __metaclass__ = MetaA
-
-        else:
-            """
+        """
             class A(metaclass=MetaA):
                 pass
             """
-            A = MetaA('A', (), {})
+        A = MetaA('A', (), {})
 
         class AA(A):
             pass
@@ -399,7 +393,7 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertEqual(g(o), "set")  # because c.Set is a subclass of
         # c.Sized and c.Container
 
-        class P(object):
+        class P:
             pass
 
         p = P()
@@ -487,7 +481,7 @@ class TestSingleDispatch(unittest.TestCase):
         r = R()
         self.assertEqual(i(r), "sequence")
 
-        class S(object):
+        class S:
             pass
 
         class T(S, c.Sized):
@@ -499,7 +493,7 @@ class TestSingleDispatch(unittest.TestCase):
         c.Container.register(T)
         self.assertEqual(h(t), "sized")  # because it's explicitly in the MRO
 
-        class U(object):
+        class U:
             def __len__(self):
                 return 0
 
@@ -612,7 +606,7 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertEqual(td.set_ops, [dict, list, dict, list])
         self.assertEqual(td.data[list], functools._find_impl(list, g.registry))
 
-        class X(object):
+        class X:
             pass
 
         c.MutableMapping.register(X)  # Will not invalidate the cache,
@@ -692,7 +686,7 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertEqual(i("str"), "str")
 
     def test_method_register(self):
-        class A(object):
+        class A:
             @functools.singledispatchmethod
             def t(self, arg):
                 self.arg = "base"
@@ -721,7 +715,7 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertFalse(hasattr(aa, 'arg'))
 
     def test_staticmethod_register(self):
-        class A(object):
+        class A:
             @functools.singledispatchmethod
             @staticmethod
             def t(arg):
@@ -744,7 +738,7 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertEqual(A.t(0.0), 0.0)
 
     def test_classmethod_register(self):
-        class A(object):
+        class A:
             def __init__(self, arg):
                 self.arg = arg
 
@@ -768,7 +762,7 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertEqual(A.t(0.0).arg, "base")
 
     def test_callable_register(self):
-        class A(object):
+        class A:
             def __init__(self, arg):
                 self.arg = arg
 
@@ -801,7 +795,7 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertTrue(Abstract.add.__isabstractmethod__)
 
     def test_type_ann_register(self):
-        class A(object):
+        class A:
             @functools.singledispatchmethod
             def t(self, arg):
                 return "base"

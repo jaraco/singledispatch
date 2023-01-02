@@ -161,7 +161,7 @@ def _find_impl(cls, registry):
                 and match not in cls.__mro__
                 and not issubclass(match, t)
             ):
-                raise RuntimeError("Ambiguous dispatch: {0} or {1}".format(match, t))
+                raise RuntimeError(f"Ambiguous dispatch: {match} or {t}")
             break
         if t in registry:
             match = t
@@ -238,17 +238,17 @@ def singledispatch(func):  # noqa: C901
             ann = getattr(cls, '__annotations__', {})
             if not ann:
                 raise TypeError(
-                    "Invalid first argument to `register()`: {cls!r}. "
-                    "Use either `@register(some_class)` or plain `@register` "
-                    "on an annotated function.".format(**locals())
+                    f"Invalid first argument to `register()`: {cls!r}. "
+                    f"Use either `@register(some_class)` or plain `@register` "
+                    f"on an annotated function."
                 )
             func = cls
 
             argname, cls = next(iter(get_type_hints(func).items()))
             if not _validate_annotation(cls):
                 raise TypeError(
-                    "Invalid annotation for {argname!r}. "
-                    "{cls!r} is not a class.".format(**locals())
+                    f"Invalid annotation for {argname!r}. "
+                    f"{cls!r} is not a class."
                 )
         registry[cls] = func
         if ns.cache_token is None and hasattr(cls, '__abstractmethods__'):
@@ -259,7 +259,7 @@ def singledispatch(func):  # noqa: C901
     def wrapper(*args, **kw):
         if not args:
             raise TypeError(
-                '{0} requires at least ' '1 positional argument'.format(funcname)
+                '{} requires at least ' '1 positional argument'.format(funcname)
             )
 
         return dispatch(args[0].__class__)(*args, **kw)
@@ -275,7 +275,7 @@ def singledispatch(func):  # noqa: C901
 
 
 # Descriptor version
-class singledispatchmethod(object):
+class singledispatchmethod:
     """Single-dispatch generic method descriptor.
 
     Supports wrapping existing descriptors and handles non-descriptor
@@ -284,7 +284,7 @@ class singledispatchmethod(object):
 
     def __init__(self, func):
         if not callable(func) and not hasattr(func, "__get__"):
-            raise TypeError("{!r} is not callable or a descriptor".format(func))
+            raise TypeError(f"{func!r} is not callable or a descriptor")
 
         self.dispatcher = singledispatch(func)
         self.func = func
