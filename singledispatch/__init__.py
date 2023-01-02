@@ -290,7 +290,7 @@ class singledispatchmethod(object):
         self.func = func
 
     def register(self, cls, method=None):
-        """generic_method.register(cls, func) -> func
+        """generic_method.register(cls, method) -> Callable
 
         Registers a new implementation for the given *cls* on a *generic_method*.
         """
