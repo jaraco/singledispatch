@@ -5,7 +5,7 @@ from weakref import WeakKeyDictionary
 from .helpers import MappingProxyType, get_cache_token, get_type_hints, update_wrapper
 
 ################################################################################
-### singledispatch() - single-dispatch generic function decorator
+# singledispatch() - single-dispatch generic function decorator
 ################################################################################
 
 
@@ -87,7 +87,7 @@ def _c3_mro(cls, abcs=None):
     )
 
 
-def _compose_mro(cls, types):
+def _compose_mro(cls, types):  # noqa: C901
     """Calculates the method resolution order for a given class *cls*.
 
     Includes relevant abstract base classes (with their respective bases) from
@@ -95,11 +95,13 @@ def _compose_mro(cls, types):
 
     """
     bases = set(cls.__mro__)
+
     # Remove entries which are already present in the __mro__ or unrelated.
     def is_related(typ):
         return typ not in bases and hasattr(typ, '__mro__') and issubclass(cls, typ)
 
     types = [n for n in types if is_related(n)]
+
     # Remove entries which are strict bases of other entries (they will end up
     # in the MRO anyway.
     def is_strict_base(typ):
@@ -185,7 +187,7 @@ def _validate_annotation(annotation):
     return valid
 
 
-def singledispatch(func):
+def singledispatch(func):  # noqa: C901
     """Single-dispatch generic function decorator.
 
     Transforms a function into a generic function, which can have different

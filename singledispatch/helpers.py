@@ -11,10 +11,6 @@ try:
 except ImportError:
     from UserDict import UserDict
 try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
-try:
     from thread import get_ident
 except ImportError:
     try:
@@ -129,14 +125,19 @@ class ChainMap(MutableMapping):
             raise KeyError('Key not found in the first mapping: {!r}'.format(key))
 
     def popitem(self):
-        'Remove and return an item pair from maps[0]. Raise KeyError is maps[0] is empty.'
+        """
+        Remove and return an item pair from maps[0]. Raise KeyError is maps[0] is empty.
+        """
         try:
             return self.maps[0].popitem()
         except KeyError:
             raise KeyError('No keys found in the first mapping.')
 
     def pop(self, key, *args):
-        'Remove *key* from maps[0] and return its value. Raise KeyError if *key* not in maps[0].'
+        """
+        Remove *key* from maps[0] and return its value.
+        Raise KeyError if *key* not in maps[0].
+        """
         try:
             return self.maps[0].pop(key, *args)
         except KeyError:

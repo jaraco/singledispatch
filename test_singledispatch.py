@@ -234,7 +234,7 @@ class TestSingleDispatch(unittest.TestCase):
     def test_register_abc(self):
         c = coll_abc
         d = {"a": "b"}
-        l = [1, 2, 3]
+        ls = [1, 2, 3]
         s = set([object(), None])
         f = frozenset(s)
         t = (1, 2, 3)
@@ -244,85 +244,85 @@ class TestSingleDispatch(unittest.TestCase):
             return "base"
 
         self.assertEqual(g(d), "base")
-        self.assertEqual(g(l), "base")
+        self.assertEqual(g(ls), "base")
         self.assertEqual(g(s), "base")
         self.assertEqual(g(f), "base")
         self.assertEqual(g(t), "base")
         g.register(c.Sized, lambda obj: "sized")
         self.assertEqual(g(d), "sized")
-        self.assertEqual(g(l), "sized")
+        self.assertEqual(g(ls), "sized")
         self.assertEqual(g(s), "sized")
         self.assertEqual(g(f), "sized")
         self.assertEqual(g(t), "sized")
         g.register(c.MutableMapping, lambda obj: "mutablemapping")
         self.assertEqual(g(d), "mutablemapping")
-        self.assertEqual(g(l), "sized")
+        self.assertEqual(g(ls), "sized")
         self.assertEqual(g(s), "sized")
         self.assertEqual(g(f), "sized")
         self.assertEqual(g(t), "sized")
         g.register(collections.ChainMap, lambda obj: "chainmap")
         self.assertEqual(g(d), "mutablemapping")  # irrelevant ABCs registered
-        self.assertEqual(g(l), "sized")
+        self.assertEqual(g(ls), "sized")
         self.assertEqual(g(s), "sized")
         self.assertEqual(g(f), "sized")
         self.assertEqual(g(t), "sized")
         g.register(c.MutableSequence, lambda obj: "mutablesequence")
         self.assertEqual(g(d), "mutablemapping")
-        self.assertEqual(g(l), "mutablesequence")
+        self.assertEqual(g(ls), "mutablesequence")
         self.assertEqual(g(s), "sized")
         self.assertEqual(g(f), "sized")
         self.assertEqual(g(t), "sized")
         g.register(c.MutableSet, lambda obj: "mutableset")
         self.assertEqual(g(d), "mutablemapping")
-        self.assertEqual(g(l), "mutablesequence")
+        self.assertEqual(g(ls), "mutablesequence")
         self.assertEqual(g(s), "mutableset")
         self.assertEqual(g(f), "sized")
         self.assertEqual(g(t), "sized")
         g.register(c.Mapping, lambda obj: "mapping")
         self.assertEqual(g(d), "mutablemapping")  # not specific enough
-        self.assertEqual(g(l), "mutablesequence")
+        self.assertEqual(g(ls), "mutablesequence")
         self.assertEqual(g(s), "mutableset")
         self.assertEqual(g(f), "sized")
         self.assertEqual(g(t), "sized")
         g.register(c.Sequence, lambda obj: "sequence")
         self.assertEqual(g(d), "mutablemapping")
-        self.assertEqual(g(l), "mutablesequence")
+        self.assertEqual(g(ls), "mutablesequence")
         self.assertEqual(g(s), "mutableset")
         self.assertEqual(g(f), "sized")
         self.assertEqual(g(t), "sequence")
         g.register(c.Set, lambda obj: "set")
         self.assertEqual(g(d), "mutablemapping")
-        self.assertEqual(g(l), "mutablesequence")
+        self.assertEqual(g(ls), "mutablesequence")
         self.assertEqual(g(s), "mutableset")
         self.assertEqual(g(f), "set")
         self.assertEqual(g(t), "sequence")
         g.register(dict, lambda obj: "dict")
         self.assertEqual(g(d), "dict")
-        self.assertEqual(g(l), "mutablesequence")
+        self.assertEqual(g(ls), "mutablesequence")
         self.assertEqual(g(s), "mutableset")
         self.assertEqual(g(f), "set")
         self.assertEqual(g(t), "sequence")
         g.register(list, lambda obj: "list")
         self.assertEqual(g(d), "dict")
-        self.assertEqual(g(l), "list")
+        self.assertEqual(g(ls), "list")
         self.assertEqual(g(s), "mutableset")
         self.assertEqual(g(f), "set")
         self.assertEqual(g(t), "sequence")
         g.register(set, lambda obj: "concrete-set")
         self.assertEqual(g(d), "dict")
-        self.assertEqual(g(l), "list")
+        self.assertEqual(g(ls), "list")
         self.assertEqual(g(s), "concrete-set")
         self.assertEqual(g(f), "set")
         self.assertEqual(g(t), "sequence")
         g.register(frozenset, lambda obj: "frozen-set")
         self.assertEqual(g(d), "dict")
-        self.assertEqual(g(l), "list")
+        self.assertEqual(g(ls), "list")
         self.assertEqual(g(s), "concrete-set")
         self.assertEqual(g(f), "frozen-set")
         self.assertEqual(g(t), "sequence")
         g.register(tuple, lambda obj: "tuple")
         self.assertEqual(g(d), "dict")
-        self.assertEqual(g(l), "list")
+        self.assertEqual(g(ls), "list")
         self.assertEqual(g(s), "concrete-set")
         self.assertEqual(g(f), "frozen-set")
         self.assertEqual(g(t), "tuple")
@@ -390,31 +390,32 @@ class TestSingleDispatch(unittest.TestCase):
         aa = AA()
         self.assertEqual(fun(aa), 'fun A')
 
-    def test_mro_conflicts(self):
+    def test_mro_conflicts(self):  # noqa: C901
         c = coll_abc
 
         @functools.singledispatch
         def g(arg):
             return "base"
 
-        class O(c.Sized):
+        class Oh(c.Sized):
             def __len__(self):
                 return 0
 
-        o = O()
+        o = Oh()
         self.assertEqual(g(o), "base")
         g.register(c.Iterable, lambda arg: "iterable")
         g.register(c.Container, lambda arg: "container")
         g.register(c.Sized, lambda arg: "sized")
         g.register(c.Set, lambda arg: "set")
         self.assertEqual(g(o), "sized")
-        c.Iterable.register(O)
+        c.Iterable.register(Oh)
         self.assertEqual(g(o), "sized")  # because it's explicitly in __mro__
-        c.Container.register(O)
+        c.Container.register(Oh)
         self.assertEqual(g(o), "sized")  # see above: Sized is in __mro__
-        c.Set.register(O)
+        c.Set.register(Oh)
         self.assertEqual(g(o), "set")  # because c.Set is a subclass of
         # c.Sized and c.Container
+
         class P(object):
             pass
 
@@ -450,6 +451,7 @@ class TestSingleDispatch(unittest.TestCase):
         c.Set.register(Q)
         self.assertEqual(g(q), "set")  # because c.Set is a subclass of
         # c.Sized and c.Iterable
+
         @functools.singledispatch
         def h(arg):
             return "base"
@@ -595,21 +597,21 @@ class TestSingleDispatch(unittest.TestCase):
             return "base"
 
         d = {}
-        l = []
+        ls = []
         self.assertEqual(len(td), 0)
         self.assertEqual(g(d), "base")
         self.assertEqual(len(td), 1)
         self.assertEqual(td.get_ops, [])
         self.assertEqual(td.set_ops, [dict])
         self.assertEqual(td.data[dict], g.registry[object])
-        self.assertEqual(g(l), "base")
+        self.assertEqual(g(ls), "base")
         self.assertEqual(len(td), 2)
         self.assertEqual(td.get_ops, [])
         self.assertEqual(td.set_ops, [dict, list])
         self.assertEqual(td.data[dict], g.registry[object])
         self.assertEqual(td.data[list], g.registry[object])
         self.assertEqual(td.data[dict], td.data[list])
-        self.assertEqual(g(l), "base")
+        self.assertEqual(g(ls), "base")
         self.assertEqual(g(d), "base")
         self.assertEqual(td.get_ops, [list, dict])
         self.assertEqual(td.set_ops, [dict, list])
@@ -621,7 +623,7 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertEqual(td.get_ops, [list, dict])
         self.assertEqual(td.set_ops, [dict, list, dict])
         self.assertEqual(td.data[dict], functools._find_impl(dict, g.registry))
-        self.assertEqual(g(l), "list")
+        self.assertEqual(g(ls), "list")
         self.assertEqual(len(td), 2)
         self.assertEqual(td.get_ops, [list, dict])
         self.assertEqual(td.set_ops, [dict, list, dict, list])
@@ -633,7 +635,7 @@ class TestSingleDispatch(unittest.TestCase):
         c.MutableMapping.register(X)  # Will not invalidate the cache,
         # not using ABCs yet.
         self.assertEqual(g(d), "base")
-        self.assertEqual(g(l), "list")
+        self.assertEqual(g(ls), "list")
         self.assertEqual(td.get_ops, [list, dict, dict, list])
         self.assertEqual(td.set_ops, [dict, list, dict, list])
         g.register(c.Sized, lambda arg: "sized")
@@ -642,11 +644,11 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertEqual(len(td), 1)
         self.assertEqual(td.get_ops, [list, dict, dict, list])
         self.assertEqual(td.set_ops, [dict, list, dict, list, dict])
-        self.assertEqual(g(l), "list")
+        self.assertEqual(g(ls), "list")
         self.assertEqual(len(td), 2)
         self.assertEqual(td.get_ops, [list, dict, dict, list])
         self.assertEqual(td.set_ops, [dict, list, dict, list, dict, list])
-        self.assertEqual(g(l), "list")
+        self.assertEqual(g(ls), "list")
         self.assertEqual(g(d), "sized")
         self.assertEqual(td.get_ops, [list, dict, dict, list, list, dict])
         self.assertEqual(td.set_ops, [dict, list, dict, list, dict, list])
@@ -656,17 +658,17 @@ class TestSingleDispatch(unittest.TestCase):
         self.assertEqual(td.set_ops, [dict, list, dict, list, dict, list])
         c.MutableSet.register(X)  # Will invalidate the cache.
         self.assertEqual(len(td), 2)  # Stale cache.
-        self.assertEqual(g(l), "list")
+        self.assertEqual(g(ls), "list")
         self.assertEqual(len(td), 1)
         g.register(c.MutableMapping, lambda arg: "mutablemapping")
         self.assertEqual(len(td), 0)
         self.assertEqual(g(d), "mutablemapping")
         self.assertEqual(len(td), 1)
-        self.assertEqual(g(l), "list")
+        self.assertEqual(g(ls), "list")
         self.assertEqual(len(td), 2)
         g.register(dict, lambda arg: "dict")
         self.assertEqual(g(d), "dict")
-        self.assertEqual(g(l), "list")
+        self.assertEqual(g(ls), "list")
         g._clear_cache()
         self.assertEqual(len(td), 0)
         functools.WeakKeyDictionary = _orig_wkd
@@ -682,10 +684,9 @@ class TestSingleDispatch(unittest.TestCase):
             return "mapping"
 
         _.__annotations__ = dict(arg=coll_abc.Mapping)
-        i.register(_)
-        # @i.register
-        # def _(arg: "collections.abc.Sequence"):
-        def _(arg):
+
+        @i.register
+        def _(arg: "collections.abc.Sequence"):
             return "sequence"
 
         _.__annotations__ = dict(arg=coll_abc.Sequence)
@@ -758,7 +759,7 @@ class TestSingleDispatch(unittest.TestCase):
             def _(arg):
                 return isinstance(arg, str)
 
-        a = A()
+        A()
 
         self.assertTrue(A.t(0))
         self.assertTrue(A.t(''))
@@ -827,16 +828,12 @@ class TestSingleDispatch(unittest.TestCase):
             def t(self, arg):
                 return "base"
 
-            # @t.register
-            # def _(self, arg: int):
-            def _(self, arg):
+            @t.register
+            def _(self, arg: int):
                 return "int"
 
-            _.__annotations__ = dict(arg=int)
-            t.register(_)
-            # @t.register
-            # def _(self, arg: str):
-            def _(self, arg):
+            @t.register
+            def _(self, arg: str):
                 return "str"
 
             _.__annotations__ = dict(arg=str)
