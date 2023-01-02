@@ -8,8 +8,6 @@ from singledispatch.helpers import Support
 import typing
 import unittest
 
-import six
-
 coll_abc = getattr(collections, 'abc', collections)
 
 
@@ -850,7 +848,7 @@ class TestSingleDispatch(unittest.TestCase):
             def _(arg):
                 return "I forgot to annotate"
 
-        scope = "TestSingleDispatch.test_invalid_registrations.<locals>." * six.PY3
+        scope = "TestSingleDispatch.test_invalid_registrations.<locals>."
         self.assertTrue(
             str(exc.exception).startswith(msg_prefix + "<function " + scope + "_")
         )
