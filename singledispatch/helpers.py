@@ -1,15 +1,9 @@
 import sys
-from abc import ABCMeta
 
-try:
-    from collections.abc import MutableMapping
-except ImportError:
-    from collections import MutableMapping
+from collections.abc import MutableMapping
 
-try:
-    from collections import UserDict
-except ImportError:
-    from UserDict import UserDict
+from collections import UserDict
+
 try:
     from thread import get_ident
 except ImportError:
@@ -154,12 +148,7 @@ class MappingProxyType(UserDict):
         self.data = data
 
 
-try:
-    from abc import get_cache_token
-except ImportError:
-
-    def get_cache_token():
-        return ABCMeta._abc_invalidation_counter
+from abc import get_cache_token  # noqa: E402, F401
 
 
 class Support(object):

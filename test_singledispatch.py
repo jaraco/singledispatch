@@ -6,24 +6,9 @@ from itertools import permutations
 import singledispatch as functools
 from singledispatch.helpers import Support
 import typing
+import unittest
+
 import six
-
-try:
-    from collections import ChainMap
-except ImportError:
-    from singledispatch.helpers import ChainMap
-
-    collections.ChainMap = ChainMap
-try:
-    from collections import OrderedDict
-except ImportError:
-    from singledispatch.helpers import OrderedDict
-
-    collections.OrderedDict = OrderedDict
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
 
 coll_abc = getattr(collections, 'abc', collections)
 
@@ -678,19 +663,14 @@ class TestSingleDispatch(unittest.TestCase):
         def i(arg):
             return "base"
 
-        # @i.register
-        # def _(arg: collections.abc.Mapping)
-        def _(arg):
+        @i.register
+        def _(arg: collections.abc.Mapping):
             return "mapping"
-
-        _.__annotations__ = dict(arg=coll_abc.Mapping)
 
         @i.register
         def _(arg: "collections.abc.Sequence"):
             return "sequence"
 
-        _.__annotations__ = dict(arg=coll_abc.Sequence)
-        i.register(_)
         self.assertEqual(i(None), "base")
         self.assertEqual(i({"a": 1}), "mapping")
         self.assertEqual(i([1, 2, 3]), "sequence")
