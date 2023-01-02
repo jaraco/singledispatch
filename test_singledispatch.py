@@ -21,9 +21,6 @@ else:
 del _prefix
 
 
-str = str
-
-
 class TestSingleDispatch(unittest.TestCase):
     def test_simple_overloads(self):
         @functools.singledispatch
