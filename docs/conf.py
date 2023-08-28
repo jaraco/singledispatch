@@ -30,6 +30,7 @@ link_files = {
 
 # Be strict about any broken references
 nitpicky = True
+nitpick_ignore = []
 
 # Include Python intersphinx mapping to prevent failures
 # jaraco/skeleton#51
@@ -42,3 +43,7 @@ intersphinx_mapping = {
 autodoc_preserve_defaults = True
 
 extensions += ['jaraco.tidelift']
+
+nitpick_ignore.append(
+    ('py:class', 'func'),
+)
