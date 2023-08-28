@@ -1,3 +1,13 @@
+v4.1.0
+======
+
+Features
+--------
+
+- Re-synced implementation with CPython 3.8, removing the compatibility code introduced for compatibility with older Pythons.
+- Require Python 3.8 or later.
+
+
 v4.0.0
 ======
 
