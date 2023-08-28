@@ -1,5 +1,0 @@
-# use jaraco.develop.cpython-sync
-{
-	"Lib/functools.py": "Lib/functools.py",
-	"Lib/test/test_functools.py": "Lib/test/test_functools.py",
-}
