@@ -1,8 +1,7 @@
 __all__ = ['singledispatch', 'singledispatchmethod']
 
-from weakref import WeakKeyDictionary
-
-from .helpers import MappingProxyType, get_cache_token, get_type_hints, update_wrapper
+from abc import get_cache_token
+from functools import update_wrapper
 
 ################################################################################
 # singledispatch() - single-dispatch generic function decorator
@@ -161,25 +160,6 @@ def _find_impl(cls, registry):
     return registry.get(match)
 
 
-def _validate_annotation(annotation):
-    """Determine if an annotation is valid for registration.
-
-    An annotation is considered valid for use in registration if it is an
-    instance of ``type`` and not a generic type from ``typing``.
-    """
-    try:
-        # In Python earlier than 3.7, the classes in typing are considered
-        # instances of type, but they invalid for registering single dispatch
-        # functions so check against GenericMeta instead.
-        from typing import GenericMeta
-
-        valid = not isinstance(annotation, GenericMeta)
-    except ImportError:
-        # In Python 3.7+, classes in typing are not instances of type.
-        valid = isinstance(annotation, type)
-    return valid
-
-
 def singledispatch(func):  # noqa: C901
     """Single-dispatch generic function decorator.
 
@@ -189,13 +169,14 @@ def singledispatch(func):  # noqa: C901
     implementations can be registered using the register() attribute of the
     generic function.
     """
+    # There are many programs that use functools without singledispatch, so we
+    # trade-off making singledispatch marginally slower for the benefit of
+    # making start-up of such applications slightly faster.
+    import types, weakref  # noqa: E401
+
     registry = {}
-    dispatch_cache = WeakKeyDictionary()
-
-    def ns():
-        pass
-
-    ns.cache_token = None
+    dispatch_cache = weakref.WeakKeyDictionary()
+    cache_token = None
 
     def dispatch(cls):
         """generic_func.dispatch(cls) -> <function implementation>
@@ -204,11 +185,12 @@ def singledispatch(func):  # noqa: C901
         for the given *cls* registered on *generic_func*.
 
         """
-        if ns.cache_token is not None:
+        nonlocal cache_token
+        if cache_token is not None:
             current_token = get_cache_token()
-            if ns.cache_token != current_token:
+            if cache_token != current_token:
                 dispatch_cache.clear()
-                ns.cache_token = current_token
+                cache_token = current_token
         try:
             impl = dispatch_cache[cls]
         except KeyError:
@@ -225,6 +207,7 @@ def singledispatch(func):  # noqa: C901
         Registers a new implementation for the given *cls* on a *generic_func*.
 
         """
+        nonlocal cache_token
         if func is None:
             if isinstance(cls, type):
                 return lambda f: register(cls, f)
@@ -237,22 +220,23 @@ def singledispatch(func):  # noqa: C901
                 )
             func = cls
 
+            # only import typing if annotation parsing is necessary
+            from typing import get_type_hints
+
             argname, cls = next(iter(get_type_hints(func).items()))
-            if not _validate_annotation(cls):
+            if not isinstance(cls, type):
                 raise TypeError(
                     f"Invalid annotation for {argname!r}. " f"{cls!r} is not a class."
                 )
         registry[cls] = func
-        if ns.cache_token is None and hasattr(cls, '__abstractmethods__'):
-            ns.cache_token = get_cache_token()
+        if cache_token is None and hasattr(cls, '__abstractmethods__'):
+            cache_token = get_cache_token()
         dispatch_cache.clear()
         return func
 
     def wrapper(*args, **kw):
         if not args:
-            raise TypeError(
-                '{} requires at least ' '1 positional argument'.format(funcname)
-            )
+            raise TypeError(f'{funcname} requires at least ' '1 positional argument')
 
         return dispatch(args[0].__class__)(*args, **kw)
 
@@ -260,7 +244,7 @@ def singledispatch(func):  # noqa: C901
     registry[object] = func
     wrapper.register = register
     wrapper.dispatch = dispatch
-    wrapper.registry = MappingProxyType(registry)
+    wrapper.registry = types.MappingProxyType(registry)
     wrapper._clear_cache = dispatch_cache.clear
     update_wrapper(wrapper, func)
     return wrapper
@@ -282,7 +266,7 @@ class singledispatchmethod:
         self.func = func
 
     def register(self, cls, method=None):
-        """generic_method.register(cls, method) -> Callable
+        """generic_method.register(cls, func) -> func
 
         Registers a new implementation for the given *cls* on a *generic_method*.
         """

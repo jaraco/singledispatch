@@ -1,0 +1,1 @@
+Re-synced implementation with CPython 3.8, removing the compatibility code introduced for compatibility with older Pythons.
