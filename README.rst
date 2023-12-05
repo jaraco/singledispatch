@@ -3,7 +3,7 @@
 
 .. image:: https://img.shields.io/pypi/pyversions/singledispatch.svg
 
-.. image:: https://github.com/jaraco/singledispatch/workflows/tests/badge.svg
+.. image:: https://github.com/jaraco/singledispatch/actions/workflows/main.yml/badge.svg
    :target: https://github.com/jaraco/singledispatch/actions?query=workflow%3A%22tests%22
    :alt: tests
 
