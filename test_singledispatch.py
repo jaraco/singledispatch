@@ -354,7 +354,7 @@ class TestSingleDispatch(unittest.TestCase):
         aa = AA()
         self.assertEqual(fun(aa), 'fun A')
 
-    def test_mro_conflicts(self):
+    def test_mro_conflicts(self):  # noqa: C901
         c = collections.abc
 
         @functools.singledispatch
