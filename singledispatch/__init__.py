@@ -61,15 +61,14 @@ def _c3_mro(cls, abcs=None):
         boundary = 0
     abcs = list(abcs) if abcs else []
     explicit_bases = list(cls.__bases__[:boundary])
-    abstract_bases = []
     other_bases = list(cls.__bases__[boundary:])
-    for base in abcs:
-        if issubclass(cls, base) and not any(
-            issubclass(b, base) for b in cls.__bases__
-        ):
-            # If *cls* is the class that introduces behaviour described by
-            # an ABC *base*, insert said ABC to its MRO.
-            abstract_bases.append(base)
+    abstract_bases = [
+        base
+        for base in abcs
+        # If *cls* is the class that introduces behaviour described by
+        # an ABC *base*, insert said ABC to its MRO.
+        if issubclass(cls, base) and not any(issubclass(b, base) for b in cls.__bases__)
+    ]
     for base in abstract_bases:
         abcs.remove(base)
     explicit_c3_mros = [_c3_mro(base, abcs=abcs) for base in explicit_bases]
@@ -115,10 +114,11 @@ def _compose_mro(cls, types):  # noqa: C901
     type_set = set(types)
     mro = []
     for typ in types:
-        found = []
-        for sub in typ.__subclasses__():
-            if sub not in bases and issubclass(cls, sub):
-                found.append([s for s in sub.__mro__ if s in type_set])
+        found = [
+            [s for s in sub.__mro__ if s in type_set]
+            for sub in typ.__subclasses__()
+            if sub not in bases and issubclass(cls, sub)
+        ]
         if not found:
             mro.append(typ)
             continue
