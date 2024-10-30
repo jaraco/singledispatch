@@ -16,6 +16,12 @@ classifiers = [
 	"Programming Language :: Python",
 	"Programming Language :: Python :: 3",
 ]
+requires-python = ">=3.9"
+dependencies = [
+]
+requires-python = ">=3.8"
+dependencies = []
+dynamic = ["version"]
 keywords = [
 	"single",
 	"dispatch",
@@ -26,9 +32,6 @@ keywords = [
 	"decorator",
 	"backport",
 ]
-requires-python = ">=3.8"
-dependencies = []
-dynamic = ["version"]
 
 [project.urls]
 Source = "https://github.com/jaraco/singledispatch"
