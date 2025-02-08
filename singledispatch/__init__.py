@@ -226,7 +226,7 @@ def singledispatch(func):  # noqa: C901
             argname, cls = next(iter(get_type_hints(func).items()))
             if not isinstance(cls, type):
                 raise TypeError(
-                    f"Invalid annotation for {argname!r}. " f"{cls!r} is not a class."
+                    f"Invalid annotation for {argname!r}. {cls!r} is not a class."
                 )
         registry[cls] = func
         if cache_token is None and hasattr(cls, '__abstractmethods__'):
@@ -236,7 +236,7 @@ def singledispatch(func):  # noqa: C901
 
     def wrapper(*args, **kw):
         if not args:
-            raise TypeError(f'{funcname} requires at least ' '1 positional argument')
+            raise TypeError(f'{funcname} requires at least 1 positional argument')
 
         return dispatch(args[0].__class__)(*args, **kw)
 
