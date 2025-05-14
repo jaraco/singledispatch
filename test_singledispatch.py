@@ -1,13 +1,15 @@
 import abc
-import sys
 import collections
 import collections.abc
 import decimal
-from itertools import permutations
-import singledispatch as functools
+import sys
 import typing
 import unittest
+from itertools import permutations
+
 from test import support
+
+import singledispatch as functools
 
 
 class TestSingleDispatch(unittest.TestCase):
@@ -528,8 +530,8 @@ class TestSingleDispatch(unittest.TestCase):
         # Sized in the MRO
 
     def test_cache_invalidation(self):
-        from collections import UserDict
         import weakref
+        from collections import UserDict
 
         class TracingDict(UserDict):
             def __init__(self, *args, **kwargs):
