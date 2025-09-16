@@ -53,9 +53,9 @@ extlinks = {
 }
 extensions += ['sphinx.ext.extlinks']
 
-# local
-
 extensions += ['jaraco.tidelift']
+
+# local
 
 nitpick_ignore += [
     ('py:class', 'func'),
