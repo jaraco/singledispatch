@@ -63,7 +63,7 @@ class TestSingleDispatch(unittest.TestCase):
 
         @g.register(int)
         def g_int(i):
-            return "int {}".format(i)
+            return f"int {i}"
 
         self.assertEqual(g(""), "base")
         self.assertEqual(g(12), "int 12")
@@ -316,10 +316,10 @@ class TestSingleDispatch(unittest.TestCase):
                 return 0  # implies Sized
 
         @c.Container.register
-        class C(object):
+        class C:
             pass
 
-        class D(object):
+        class D:
             pass  # unrelated
 
         class X(D, C, B):

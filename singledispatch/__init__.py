@@ -85,7 +85,7 @@ def _c3_mro(cls, abcs=None):
     )
 
 
-def _compose_mro(cls, types):  # noqa: C901
+def _compose_mro(cls, types):
     """Calculates the method resolution order for a given class *cls*.
 
     Includes relevant abstract base classes (with their respective bases) from
@@ -172,7 +172,7 @@ def singledispatch(func):  # noqa: C901
     # There are many programs that use functools without singledispatch, so we
     # trade-off making singledispatch marginally slower for the benefit of
     # making start-up of such applications slightly faster.
-    import types  # noqa: E401
+    import types
     import weakref
 
     registry = {}
